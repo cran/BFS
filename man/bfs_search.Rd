@@ -4,15 +4,15 @@
 \alias{bfs_search}
 \title{Search titles of available BFS datasets}
 \usage{
-bfs_search(string, data = bfs_get_metadata(), ignore.case = TRUE)
+bfs_search(data = bfs_get_metadata(), string, ignore.case = TRUE)
 }
 \arguments{
-\item{string}{A regular expression string to search for.}
-
 \item{data}{The data frame to search. This can be either a data frame
 previously fetched using \code{\link{bfs_get_metadata}} (recommended) or left
 blank, in which case a temporary data frame is fetched. The second option
 adds a few seconds to each search query.}
+
+\item{string}{A regular expression string to search for.}
 
 \item{ignore.case}{Whether the search should be case-insensitive.}
 }
@@ -21,13 +21,13 @@ A data frame.
 }
 \description{
 Returns a tibble containing the titles, publication date,
-observation periods, metadata url and download urls of
+observation periods, data source, metadata url and download urls of
 available BFS datasets in a given language which match
 the given criteria.
 }
 \examples{
-\donttest{df_en <- bfs_get_metadata(language = "en")}
-\donttest{bfs_search("education", df_en)}
+\donttest{meta_en <- bfs_get_metadata(language = "en")}
+\donttest{bfs_search(data = meta_en, string = "university students")}
 
 }
 \seealso{
