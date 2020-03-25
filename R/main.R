@@ -29,7 +29,11 @@ get_bfs_metadata <- function(url) {
     rvest::html_text()
   
   metadata_observation_period <- tryCatch(metadata_info[seq(1, length(metadata_info), 3)], error = function(e) NA)
-  # metadata_observation_period <- gsub("[^0-9.-]", "", metadata_observation_period)
+  metadata_observation_period <- iconv(metadata_observation_period, "latin1", "ASCII", sub="") # remove non-ASCII characters
+  metadata_observation_period <- gsub("Dargestellter Zeitraum: ", "", metadata_observation_period)
+  metadata_observation_period <- gsub("Priode d'observation: ", "", metadata_observation_period)
+  metadata_observation_period <- gsub("Periodo contemplato: ", "", metadata_observation_period)
+  metadata_observation_period <- gsub("Observation period: ", "", metadata_observation_period)
   
   source <- tryCatch(metadata_info[seq(2, length(metadata_info), 3)], error = function(e) NA)
   
@@ -51,7 +55,7 @@ get_bfs_metadata <- function(url) {
   
   df <- tibble::tibble(
     title = metadata_title,
-    period = metadata_observation_period,
+    observation_period = metadata_observation_period,
     published = metadata_published,
     source = source,
     url_bfs = metadata_href,
@@ -74,7 +78,7 @@ get_bfs_metadata_all <- function(i) {
   df_metadata_all <- rbind.data.frame(df_metadata,
                                       tibble::tibble(
                                         title = character(0),
-                                        period = character(0),
+                                        observation_period = character(0),
                                         published = character(0),
                                         source = character(0),
                                         url_bfs = character(0),
@@ -83,14 +87,13 @@ get_bfs_metadata_all <- function(i) {
   )
 }
 
-#' Get all BFS metadata in a given language
+#' Download BFS metadata in a given language
 #'
 #' Returns a tibble containing the titles, publication dates,
 #' observation periods, data source, metadata webpage urls and download link urls 
-#' in a given language of the current public BFS datasets available.
-#'
-#' @param language character The language of the metadata.
-#' @param path Path to local folder to use as a cache, default to {pins} cache.
+#' in a given language of the current public BFS datasets available. If the path of 
+#' the cache argument is not provided, the downloaded BFS dataset will be saved in 
+#' the default cache folder of the {pins} package. 
 #'
 #' Languages availables are German ("de", as default), French ("fr"),
 #' Italian ("it") and English ("en"). Note that Italian and English BFS
@@ -102,22 +105,28 @@ get_bfs_metadata_all <- function(i) {
 #' during the day, the existing dataset is loaded into R from the pins caching 
 #' folder instead of downloading again the metadata from the BFS website.
 #'
+#' @param language character The language of the metadata.
+#' @param path Path to local folder to use as a cache, default to {pins} cache.
+#' @param force Force to download metadata even if already downloaded today.
+#'
 #' @return A tibble
+#'
+#' @seealso \code{\link{bfs_get_dataset}}
 #'
 #' @examples
 #' \donttest{meta_en <- bfs_get_metadata(language = "en")}
 #'
 #' @export
 
-bfs_get_metadata <- function(language = "de", path = pins::board_cache_path()) {
+bfs_get_metadata <- function(language = "de", path = pins::board_cache_path(), force = FALSE) {
   
   pins::board_register_local(cache = path) # pins temp folder by default
   
   # Do NOT download metadata again if metadata already downloaded today
   bfs_metadata <- tryCatch(pins::pin_get(paste0("bfs_meta_", language), board = "local"), error = function(e) "Metadata not downloaded today")
-  bfs_metadata_today <- attr(bfs_metadata, "metadata") == Sys.Date()
+  bfs_metadata_today <- attr(bfs_metadata, "download_date") == Sys.Date()
   
-  if(!isTRUE(bfs_metadata_today)){
+  if(!isTRUE(bfs_metadata_today) | force == TRUE){
   
   # extract the number pages to load
   bfs_loadpages <- function(url) {
@@ -157,7 +166,7 @@ bfs_get_metadata <- function(language = "de", path = pins::board_cache_path()) {
   bfs_metadata <- purrr::map_dfr(url_all, get_bfs_metadata_all) %>%
     tibble::as_tibble()
   
-  attr(bfs_metadata, "metadata") <- Sys.Date()
+  attr(bfs_metadata, "download_date") <- Sys.Date()
   
   pins::pin(bfs_metadata, name = paste0("bfs_meta_", language), board = "local")
   
@@ -175,16 +184,17 @@ bfs_get_metadata <- function(language = "de", path = pins::board_cache_path()) {
 #' Returns a tibble containing the titles, publication date,
 #' observation periods, data source, metadata url and download urls of
 #' available BFS datasets in a given language which match
-#' the given criteria.
+#' the given criteria. This function leverages the R base function \code{grepl} 
+#' but calls the data argument first to allow the use of the pipe operator from 
+#' magrittr.
 #'
 #' @param data The data frame to search. This can be either a data frame
 #' previously fetched using \code{\link{bfs_get_metadata}} (recommended) or left
 #' blank, in which case a temporary data frame is fetched. The second option
 #' adds a few seconds to each search query.
-#'
-#' @param string A regular expression string to search for.
-#'
+#' @param pattern A regular expression string to search for.
 #' @param ignore.case Whether the search should be case-insensitive.
+#' @param fixed logical. If TRUE, pattern is a string to be matched as is.
 #'
 #' @return A data frame.
 #'
@@ -192,25 +202,23 @@ bfs_get_metadata <- function(language = "de", path = pins::board_cache_path()) {
 #'
 #' @examples
 #' \donttest{meta_en <- bfs_get_metadata(language = "en")}
-#' \donttest{bfs_search(data = meta_en, string = "university students")}
+#' \donttest{bfs_search(data = meta_en, pattern = "university students")}
 #'
 #' @export
 
-bfs_search <- function(data = bfs_get_metadata(), string, ignore.case = TRUE) {
-  data[grepl(string, data$title, ignore.case = ignore.case), ]
+bfs_search <- function(data = bfs_get_metadata(), pattern, ignore.case = TRUE, fixed = FALSE) {
+  data[grepl(pattern, data$title, ignore.case = ignore.case, fixed = fixed), ]
 }
 
-#' Get BFS PC-Axis files as data frames
+#' Download BFS dataset in a given language
 #'
-#' Returns a data frame/tibble from a given BFS PC-Axis file. The
-#' column names are always rendered in German and are renamed 
+#' Returns a data frame/tibble from  the URL of a given BFS PC-Axis file. 
+#' The default language is German and the column names are renamed 
 #' using the \code{\link[janitor]{clean_names}} function of the
-#' janitor package. If the path of the cache argument is provided, the 
+#' janitor package. If the path of the cache argument is not provided, the 
 #' downloaded BFS dataset will be saved in the default cache 
-#' folder of the {pins} package. 
-#'
-#' @param url_px The url link to download the PC-Axis file.
-#' @param path The local folder to use as a cache, default to {pins} cache.
+#' folder of the {pins} package. The metadata can be accessed by making the
+#' downloaded dataset an argument of the base R function \code{attributes()}.
 #'
 #' The BFS data is saved in a local folder using the pins package. The
 #' function allows to download the BFS data only once per day. If the data 
@@ -218,30 +226,224 @@ bfs_search <- function(data = bfs_get_metadata(), string, ignore.case = TRUE) {
 #' into R from the pins caching folder instead of downloading again the 
 #' data from the BFS website.
 #'
+#' @param url_px The url link to download the PC-Axis file.
+#' @param language Language of the dataset to be translated if exists.
+#' @param path The local folder to use as a cache, default to {pins} cache.
+#' @param force Force download to download data even if already downloaded today.
+#'
+#' @seealso \code{\link{bfs_get_metadata}}
+#'
 #' @examples
 #' \donttest{meta_en <- bfs_get_metadata(language = "en")}
-#' \donttest{bfs_meta_edu <- bfs_search(data = meta_en, string = "university students")}
-#' \donttest{bfs_get_dataset(bfs_meta_edu$url_px[1])}
+#' \donttest{bfs_meta_edu <- bfs_search(data = meta_en, pattern = "university students")}
+#' \donttest{bfs_get_dataset(bfs_meta_edu$url_px[1], language = "en")}
 #'
 #' @export
 
-bfs_get_dataset <- function(url_px, path = pins::board_cache_path()) {
+bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_path(), force = FALSE) {
   pins::board_register_local(cache = path) # temp folder of the spins package
-  dataset_name <- paste0("bfs_data_", gsub("[^0-9]", "", url_px))
+  dataset_name <- paste0("bfs_data_", gsub("[^0-9]", "", url_px), "_", language)
   tempfile_path <- paste0(tempdir(), "/", dataset_name, ".px") # normal temp folder
   
   # Do NOT download data again if data already downloaded today
   bfs_data <- tryCatch(pins::pin_get(dataset_name, board = "local"), error = function(e) "Data not downloaded today")
-  bfs_data_today <- attr(bfs_data, "metadata") == Sys.Date()
+  bfs_data_today <- attr(bfs_data, "download_date") == Sys.Date()
   
-  if(!isTRUE(bfs_data_today)){
+  if(!isTRUE(bfs_data_today) & language == "de" | force == TRUE & language == "de"){
     download.file(url_px, destfile = file.path(tempfile_path))
-    bfs_data <- tibble::as_tibble(as.data.frame(pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))))
+    bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
+    bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
     bfs_data <- janitor::clean_names(bfs_data)
-
-    attr(bfs_data, "metadata") <- Sys.Date()
     
-    pins::pin(bfs_data, name = dataset_name, board = "local") # caching bfs_data in spin
+    attr(bfs_data, "download_date") <- Sys.Date()
+    attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
+    attr(bfs_data, "description") <- bfs_px$DESCRIPTION[[1]]
+    attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+    attr(bfs_data, "link") <- bfs_px$LINK[[1]]
+    attr(bfs_data, "note") <- bfs_px$NOTE[[1]]
+    attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA[[1]]
+    attr(bfs_data, "survey") <- bfs_px$SURVEY[[1]]
+    attr(bfs_data, "title") <- bfs_px$TITLE[[1]]
+    attr(bfs_data, "source") <- bfs_px$SOURCE[[1]]
+    attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
+    
+    languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
+    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    
+    attr(bfs_data, "download_date") <- Sys.Date()
+    attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
+    attr(bfs_data, "description") <- bfs_px$DESCRIPTION[[1]]
+    attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+    attr(bfs_data, "link") <- bfs_px$LINK[[1]]
+    attr(bfs_data, "note") <- bfs_px$NOTE[[1]]
+    attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA[[1]]
+    attr(bfs_data, "survey") <- bfs_px$SURVEY[[1]]
+    attr(bfs_data, "title") <- bfs_px$TITLE[[1]]
+    attr(bfs_data, "source") <- bfs_px$SOURCE[[1]]
+    attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
+
+    pins::pin(bfs_data, name = paste0(dataset_name), board = "local")
+  } else if (!isTRUE(bfs_data_today) & language == "fr" | force == TRUE & language == "fr") {
+    download.file(url_px, destfile = file.path(tempfile_path))
+    bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
+    bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
+    
+    attr(bfs_data, "download_date") <- Sys.Date()
+    attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
+    attr(bfs_data, "description") <- bfs_px$DESCRIPTION[[1]]
+    attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+    attr(bfs_data, "link") <- bfs_px$LINK[[1]]
+    attr(bfs_data, "note") <- bfs_px$NOTE[[1]]
+    attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA[[1]]
+    attr(bfs_data, "survey") <- bfs_px$SURVEY[[1]]
+    attr(bfs_data, "title") <- bfs_px$TITLE[[1]]
+    attr(bfs_data, "source") <- bfs_px$SOURCE[[1]]
+    attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
+    
+    languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
+    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    
+    if(is.element(language, languages_availables)){
+      default_names <- names(bfs_px$VALUES)
+      new_names <- names(bfs_px$VALUES.fr.)
+      n_names <- length(default_names)
+      
+      # ! possible bugs in new_categories
+      new_categories <- gsub('\", \"', "\n", bfs_px$VALUES.fr.)
+      new_categories <- gsub('\",\"', "\n", new_categories)
+      new_categories <- gsub(' \"', "", new_categories)
+      new_categories <- strsplit(new_categories, "\n")
+      
+      for(i in 1:n_names) {
+        names(bfs_data)[names(bfs_data) == default_names[i]] <- new_names[i]
+        l <- as.name(new_names[i])
+        levels(bfs_data[[l]]) <- new_categories[[i]]
+        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+      }
+      
+      bfs_data <- janitor::clean_names(bfs_data)
+      
+      attr(bfs_data, "download_date") <- Sys.Date()
+      attr(bfs_data, "contact") <- bfs_px$CONTACT.fr.[[1]]
+      attr(bfs_data, "description") <- bfs_px$DESCRIPTION.fr.[[1]]
+      attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+      attr(bfs_data, "link") <- bfs_px$LINK.fr.[[1]]
+      attr(bfs_data, "note") <- bfs_px$NOTE.fr.[[1]]
+      attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA.fr.[[1]]
+      attr(bfs_data, "survey") <- bfs_px$SURVEY.fr.[[1]]
+      attr(bfs_data, "title") <- bfs_px$TITLE.fr.[[1]]
+      attr(bfs_data, "source") <- bfs_px$SOURCE.fr.[[1]]
+      attr(bfs_data, "units") <- bfs_px$UNITS.fr.[[1]]
+    }
+    pins::pin(bfs_data, name = paste0(dataset_name), board = "local")
+    
+  } else if (!isTRUE(bfs_data_today) & language == "it" | force == TRUE & language == "it") {
+    download.file(url_px, destfile = file.path(tempfile_path))
+    bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
+    bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
+    
+    attr(bfs_data, "download_date") <- Sys.Date()
+    attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
+    attr(bfs_data, "description") <- bfs_px$DESCRIPTION[[1]]
+    attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+    attr(bfs_data, "link") <- bfs_px$LINK[[1]]
+    attr(bfs_data, "note") <- bfs_px$NOTE[[1]]
+    attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA[[1]]
+    attr(bfs_data, "survey") <- bfs_px$SURVEY[[1]]
+    attr(bfs_data, "title") <- bfs_px$TITLE[[1]]
+    attr(bfs_data, "source") <- bfs_px$SOURCE[[1]]
+    attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
+    
+    languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
+    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    
+    if(is.element(language, languages_availables)){
+      default_names <- names(bfs_px$VALUES)
+      new_names <- names(bfs_px$VALUES.it.)
+      n_names <- length(default_names)
+      
+      # ! possible bugs in new_categories
+      new_categories <- gsub('\", \"', "\n", bfs_px$VALUES.it.)
+      new_categories <- gsub('\",\"', "\n", new_categories)
+      new_categories <- gsub(' \"', "", new_categories)
+      new_categories <- strsplit(new_categories, "\n")
+      
+      for(i in 1:n_names) {
+        names(bfs_data)[names(bfs_data) == default_names[i]] <- new_names[i]
+        l <- as.name(new_names[i])
+        levels(bfs_data[[l]]) <- new_categories[[i]]
+        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+      }
+    
+      bfs_data <- janitor::clean_names(bfs_data)
+      
+      attr(bfs_data, "download_date") <- Sys.Date()
+      attr(bfs_data, "contact") <- bfs_px$CONTACT.it.[[1]]
+      attr(bfs_data, "description") <- bfs_px$DESCRIPTION.it.[[1]]
+      attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+      attr(bfs_data, "link") <- bfs_px$LINK.it.[[1]]
+      attr(bfs_data, "note") <- bfs_px$NOTE.it.[[1]]
+      attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA.it.[[1]]
+      attr(bfs_data, "survey") <- bfs_px$SURVEY.it.[[1]]
+      attr(bfs_data, "title") <- bfs_px$TITLE.it.[[1]]
+      attr(bfs_data, "source") <- bfs_px$SOURCE.it.[[1]]
+      attr(bfs_data, "units") <- bfs_px$UNITS.it.[[1]]
+    }
+    pins::pin(bfs_data, name = paste0(dataset_name), board = "local")
+    
+  } else if (!isTRUE(bfs_data_today) & language == "en" | force == TRUE & language == "en") {
+    download.file(url_px, destfile = file.path(tempfile_path))
+    bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
+    bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
+    
+    attr(bfs_data, "download_date") <- Sys.Date()
+    attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
+    attr(bfs_data, "description") <- bfs_px$DESCRIPTION[[1]]
+    attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+    attr(bfs_data, "link") <- bfs_px$LINK[[1]]
+    attr(bfs_data, "note") <- bfs_px$NOTE[[1]]
+    attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA[[1]]
+    attr(bfs_data, "survey") <- bfs_px$SURVEY[[1]]
+    attr(bfs_data, "title") <- bfs_px$TITLE[[1]]
+    attr(bfs_data, "source") <- bfs_px$SOURCE[[1]]
+    attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
+    
+    languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
+    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    
+    if(is.element(language, languages_availables)){
+      default_names <- names(bfs_px$VALUES)
+      new_names <- names(bfs_px$VALUES.en.)
+      n_names <- length(default_names)
+      
+      # ! possible bugs in new_categories
+      new_categories <- gsub('\", \"', "\n", bfs_px$VALUES.en.)
+      new_categories <- gsub('\",\"', "\n", new_categories)
+      new_categories <- gsub(' \"', "", new_categories)
+      new_categories <- strsplit(new_categories, "\n")
+      
+      for(i in 1:n_names) {
+        names(bfs_data)[names(bfs_data) == default_names[[i]]] <- new_names[i]
+        l <- as.name(new_names[[i]])
+        levels(bfs_data[[l]]) <- new_categories[[i]]
+        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+      }
+      
+      bfs_data <- janitor::clean_names(bfs_data)
+      
+      attr(bfs_data, "download_date") <- Sys.Date()
+      attr(bfs_data, "contact") <- bfs_px$CONTACT.en.[[1]]
+      attr(bfs_data, "description") <- bfs_px$DESCRIPTION.en.[[1]]
+      attr(bfs_data, "last_update") <- bfs_px$LAST.UPDATED[[1]]
+      attr(bfs_data, "link") <- bfs_px$LINK.en.[[1]]
+      attr(bfs_data, "note") <- bfs_px$NOTE.en.[[1]]
+      attr(bfs_data, "subject_area") <- bfs_px$SUBJECT.AREA.en.[[1]]
+      attr(bfs_data, "survey") <- bfs_px$SURVEY.en.[[1]]
+      attr(bfs_data, "title") <- bfs_px$TITLE.en.[[1]]
+      attr(bfs_data, "source") <- bfs_px$SOURCE.en.[[1]]
+      attr(bfs_data, "units") <- bfs_px$UNITS.en.[[1]]
+    }
+    pins::pin(bfs_data, name = paste0(dataset_name), board = "local")
   }
   
   bfs_data <- pins::pin_get(dataset_name, board = "local")
