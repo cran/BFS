@@ -1,4 +1,4 @@
-utils::globalVariables(c(".", "pb"))
+utils::globalVariables(c(".", "pb", "url_px", "link_2", "pubDate_2", "published", "title", "title_2", "url_bfs", "url_p"))
 env <- new.env(parent = emptyenv())
 
 #' Get metadata of a give url page
@@ -230,20 +230,16 @@ bfs_search <- function(data = bfs_get_metadata(), pattern, ignore.case = TRUE, f
 #' @param language Language of the dataset to be translated if exists.
 #' @param path The local folder to use as a cache, default to {pins} cache.
 #' @param force Force download to download data even if already downloaded today.
+#' @param clean_names Clean column names using \code{janitor::clean_names()}
 #'
 #' @seealso \code{\link{bfs_get_metadata}}
 #'
-#' @examples
-#' \donttest{meta_en <- bfs_get_metadata(language = "en")}
-#' \donttest{bfs_meta_edu <- bfs_search(data = meta_en, pattern = "university students")}
-#' \donttest{bfs_get_dataset(bfs_meta_edu$url_px[1], language = "en")}
-#'
 #' @export
 
-bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_path(), force = FALSE) {
+bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_path(), clean_names = TRUE, force = FALSE) {
   pins::board_register_local(cache = path) # temp folder of the spins package
   dataset_name <- paste0("bfs_data_", gsub("[^0-9]", "", url_px), "_", language)
-  tempfile_path <- paste0(tempdir(), "/", dataset_name, ".px") # normal temp folder
+  tempfile_path <- paste0(tempdir(), "\\", dataset_name, ".px") # normal temp folder
   
   # Do NOT download data again if data already downloaded today
   bfs_data <- tryCatch(pins::pin_get(dataset_name, board = "local"), error = function(e) "Data not downloaded today")
@@ -251,9 +247,18 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
   
   if(!isTRUE(bfs_data_today) & language == "de" | force == TRUE & language == "de"){
     download.file(url_px, destfile = file.path(tempfile_path))
+    # ADD FIX. see: https://github.com/cjgb/pxR/issues/1#issuecomment-800023341
+    x <- iconv(readLines(file.path(tempfile_path), encoding = "CP1252"), from = "CP1252", to = "Latin1", sub = "")
+    x <- gsub('\"......\"', '\"....\"', x, fixed = TRUE)
+    x <- gsub('\".....\"', '\"....\"', x, fixed = TRUE)
+    writeLines(x, con = file.path(tempfile_path), useBytes = TRUE)
+    # END FIX
     bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
     bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
-    bfs_data <- janitor::clean_names(bfs_data)
+    
+    if(clean_names){
+      bfs_data <- janitor::clean_names(bfs_data)
+    }
     
     attr(bfs_data, "download_date") <- Sys.Date()
     attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
@@ -268,7 +273,7 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
     
     languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
-    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    if(!is.element(language, languages_availables)) cat(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
     
     attr(bfs_data, "download_date") <- Sys.Date()
     attr(bfs_data, "contact") <- bfs_px$CONTACT[[1]]
@@ -285,6 +290,12 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     pins::pin(bfs_data, name = paste0(dataset_name), board = "local")
   } else if (!isTRUE(bfs_data_today) & language == "fr" | force == TRUE & language == "fr") {
     download.file(url_px, destfile = file.path(tempfile_path))
+    # ADD FIX. see: https://github.com/cjgb/pxR/issues/1#issuecomment-800023341
+    x <- iconv(readLines(file.path(tempfile_path), encoding = "CP1252"), from = "CP1252", to = "Latin1", sub = "")
+    x <- gsub('\"......\"', '\"....\"', x, fixed = TRUE)
+    x <- gsub('\".....\"', '\"....\"', x, fixed = TRUE)
+    writeLines(x, con = file.path(tempfile_path), useBytes = TRUE)
+    # END FIX
     bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
     bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
     
@@ -301,7 +312,7 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
     
     languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
-    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    if(!is.element(language, languages_availables)) cat(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
     
     if(is.element(language, languages_availables)){
       default_names <- names(bfs_px$VALUES)
@@ -315,13 +326,18 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
       new_categories <- strsplit(new_categories, "\n")
       
       for(i in 1:n_names) {
-        names(bfs_data)[names(bfs_data) == default_names[i]] <- new_names[i]
-        l <- as.name(new_names[i])
-        levels(bfs_data[[l]]) <- new_categories[[i]]
-        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        tryCatch({
+          names(bfs_data)[names(bfs_data) == default_names[[i]]] <- new_names[i]
+          l <- as.name(new_names[[i]])
+          levels(bfs_data[[l]]) <- new_categories[[i]]
+          replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        }, error= function(e) {cat("Failed to translate name.", "\n")
+        })
       }
       
-      bfs_data <- janitor::clean_names(bfs_data)
+      if(clean_names){
+        bfs_data <- janitor::clean_names(bfs_data)
+      }
       
       attr(bfs_data, "download_date") <- Sys.Date()
       attr(bfs_data, "contact") <- bfs_px$CONTACT.fr.[[1]]
@@ -339,6 +355,12 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     
   } else if (!isTRUE(bfs_data_today) & language == "it" | force == TRUE & language == "it") {
     download.file(url_px, destfile = file.path(tempfile_path))
+    # ADD FIX. see: https://github.com/cjgb/pxR/issues/1#issuecomment-800023341
+    x <- iconv(readLines(file.path(tempfile_path), encoding = "CP1252"), from = "CP1252", to = "Latin1", sub = "")
+    x <- gsub('\"......\"', '\"....\"', x, fixed = TRUE)
+    x <- gsub('\".....\"', '\"....\"', x, fixed = TRUE)
+    writeLines(x, con = file.path(tempfile_path), useBytes = TRUE)
+    # END FIX
     bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
     bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
     
@@ -355,7 +377,7 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
     
     languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
-    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    if(!is.element(language, languages_availables)) cat(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
     
     if(is.element(language, languages_availables)){
       default_names <- names(bfs_px$VALUES)
@@ -369,13 +391,18 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
       new_categories <- strsplit(new_categories, "\n")
       
       for(i in 1:n_names) {
-        names(bfs_data)[names(bfs_data) == default_names[i]] <- new_names[i]
-        l <- as.name(new_names[i])
-        levels(bfs_data[[l]]) <- new_categories[[i]]
-        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        tryCatch({
+          names(bfs_data)[names(bfs_data) == default_names[[i]]] <- new_names[i]
+          l <- as.name(new_names[[i]])
+          levels(bfs_data[[l]]) <- new_categories[[i]]
+          replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        }, error= function(e) {cat("Failed to translate name.", "\n")
+        })
       }
     
-      bfs_data <- janitor::clean_names(bfs_data)
+      if(clean_names){
+        bfs_data <- janitor::clean_names(bfs_data)
+      }
       
       attr(bfs_data, "download_date") <- Sys.Date()
       attr(bfs_data, "contact") <- bfs_px$CONTACT.it.[[1]]
@@ -393,6 +420,12 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     
   } else if (!isTRUE(bfs_data_today) & language == "en" | force == TRUE & language == "en") {
     download.file(url_px, destfile = file.path(tempfile_path))
+    # ADD FIX. see: https://github.com/cjgb/pxR/issues/1#issuecomment-800023341
+    x <- iconv(readLines(file.path(tempfile_path), encoding = "CP1252"), from = "CP1252", to = "Latin1", sub = "")
+    x <- gsub('\"......\"', '\"....\"', x, fixed = TRUE)
+    x <- gsub('\".....\"', '\"....\"', x, fixed = TRUE)
+    writeLines(x, con = file.path(tempfile_path), useBytes = TRUE)
+    # END FIX
     bfs_px <- pxR::read.px(file.path(tempfile_path), na.strings = c('"."', '".."', '"..."', '"...."', '"....."', '"......"', '":"'))
     bfs_data <- tibble::as_tibble(as.data.frame(bfs_px))
     
@@ -409,7 +442,7 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
     attr(bfs_data, "units") <- bfs_px$UNITS[[1]]
     
     languages_availables <- strsplit(bfs_px$LANGUAGES[[1]], '\",\"', "\n")[[1]]
-    if(!is.element(language, languages_availables)) warning(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
+    if(!is.element(language, languages_availables)) cat(paste0('Language "', language, '" not available. Dataset downloaded in the default language. Try with another language.'))
     
     if(is.element(language, languages_availables)){
       default_names <- names(bfs_px$VALUES)
@@ -423,13 +456,18 @@ bfs_get_dataset <- function(url_px, language = "de", path = pins::board_cache_pa
       new_categories <- strsplit(new_categories, "\n")
       
       for(i in 1:n_names) {
-        names(bfs_data)[names(bfs_data) == default_names[[i]]] <- new_names[i]
-        l <- as.name(new_names[[i]])
-        levels(bfs_data[[l]]) <- new_categories[[i]]
-        replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        tryCatch({
+          names(bfs_data)[names(bfs_data) == default_names[[i]]] <- new_names[i]
+          l <- as.name(new_names[[i]])
+          levels(bfs_data[[l]]) <- new_categories[[i]]
+          replace(bfs_data[[l]], unique(bfs_data[[l]]), new_categories[[i]])
+        }, error= function(e) {cat("Failed to translate name.", "\n")
+      })
       }
       
-      bfs_data <- janitor::clean_names(bfs_data)
+      if(clean_names){
+        bfs_data <- janitor::clean_names(bfs_data)
+      }
       
       attr(bfs_data, "download_date") <- Sys.Date()
       attr(bfs_data, "contact") <- bfs_px$CONTACT.en.[[1]]
