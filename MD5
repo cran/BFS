@@ -1,10 +1,11 @@
-2df540617b422ce53fe4ce17e3132aca *DESCRIPTION
+5cab4f4a51ec25425d8f4681a607adeb *DESCRIPTION
 2fec4495813f09fd782f6d5c193d27d5 *NAMESPACE
-81fb7dace62fd7bf290532ccd22c4a31 *NEWS.md
-0b685f113ba4a4644b236988297c98a2 *R/bfs_get_catalog.R
-27a34cbe80f3a826a9366be27defdd5e *R/main.R
+cd65d14a577035f85fb95b4befbd4a31 *NEWS.md
+0fd8a1f6c0d56a7b16eb08abc90c1c68 *R/bfs_get_catalog.R
+24e293ac48e9b82f8a8aaa0324cc7437 *R/main.R
 3ae23ff1c90581c3e5651878b3705fff *R/utils-pipe.R
-36b2530d775537369f5778051b12fedb *README.md
+8a8cf76ef6852bad3de3a39df7924a6a *R/utils.R
+3b7f1669ec5634e7d9422bb1fa510c72 *README.md
 b87dd6087526925844e49c4b99c31c15 *man/bfs_get_catalog.Rd
 d1095a4c7ae6676cd11ae81f46faf1b8 *man/bfs_get_dataset.Rd
 c160db8b42a4da1aae6f28743c826669 *man/bfs_get_metadata.Rd
