@@ -61,16 +61,16 @@ catalog_data_en
     ## # A tibble: 170 x 5
     ##    title            language published           url_bfs           url_px       
     ##    <chr>            <chr>    <chr>               <chr>             <chr>        
-    ##  1 Hotel accommoda~ en       Hotel accommodatio~ https://www.bfs.~ https://www.~
-    ##  2 Hotel accommoda~ en       Hotel accommodatio~ https://www.bfs.~ https://www.~
+    ##  1 Permanent resid~ en       Permanent resident~ https://www.bfs.~ https://www.~
+    ##  2 Private househo~ en       Private households~ https://www.bfs.~ https://www.~
     ##  3 Hotel accommoda~ en       Hotel accommodatio~ https://www.bfs.~ https://www.~
-    ##  4 Hotel sector: S~ en       Hotel sector: Supp~ https://www.bfs.~ https://www.~
-    ##  5 Hotel sector: S~ en       Hotel sector: Supp~ https://www.bfs.~ https://www.~
-    ##  6 Hotel sector: s~ en       Hotel sector: supp~ https://www.bfs.~ https://www.~
-    ##  7 Retail Trade Tu~ en       Retail Trade Turno~ https://www.bfs.~ https://www.~
-    ##  8 Retail Trade Tu~ en       Retail Trade Turno~ https://www.bfs.~ https://www.~
-    ##  9 Air emissions a~ en       Air emissions acco~ https://www.bfs.~ https://www.~
-    ## 10 Deaths per mont~ en       Deaths per month a~ https://www.bfs.~ https://www.~
+    ##  4 Hotel accommoda~ en       Hotel accommodatio~ https://www.bfs.~ https://www.~
+    ##  5 Hotel accommoda~ en       Hotel accommodatio~ https://www.bfs.~ https://www.~
+    ##  6 Hotel sector: S~ en       Hotel sector: Supp~ https://www.bfs.~ https://www.~
+    ##  7 Hotel sector: S~ en       Hotel sector: Supp~ https://www.bfs.~ https://www.~
+    ##  8 Hotel sector: s~ en       Hotel sector: supp~ https://www.bfs.~ https://www.~
+    ##  9 Retail Trade Tu~ en       Retail Trade Turno~ https://www.bfs.~ https://www.~
+    ## 10 Retail Trade Tu~ en       Retail Trade Turno~ https://www.bfs.~ https://www.~
     ## # ... with 160 more rows
 
 ### Search for a specific dataset
@@ -176,16 +176,16 @@ catalog_tables_en
     ## # A tibble: 350 x 5
     ##    title           language published           url_bfs          url_table      
     ##    <chr>           <chr>    <chr>               <chr>            <chr>          
-    ##  1 Deaths per wee~ en       Deaths per week by~ https://www.bfs~ https://www.bf~
-    ##  2 Deaths per wee~ en       Deaths per week by~ https://www.bfs~ https://www.bf~
-    ##  3 Weekly number ~ en       Weekly number of d~ https://www.bfs~ https://www.bf~
-    ##  4 CPI (december ~ en       CPI (december 2020~ https://www.bfs~ https://www.bf~
-    ##  5 CPI (december ~ en       CPI (december 2020~ https://www.bfs~ https://www.bf~
-    ##  6 CPI, Global in~ en       CPI, Global index ~ https://www.bfs~ https://www.bf~
-    ##  7 HICP (2015=100~ en       HICP (2015=100), a~ https://www.bfs~ https://www.bf~
-    ##  8 Indices and va~ en       Indices and variat~ https://www.bfs~ https://www.bf~
-    ##  9 Indices and va~ en       Indices and variat~ https://www.bfs~ https://www.bf~
-    ## 10 Indices and va~ en       Indices and variat~ https://www.bfs~ https://www.bf~
+    ##  1 Permanent resi~ en       Permanent resident~ https://www.bfs~ https://www.bf~
+    ##  2 Permanent resi~ en       Permanent resident~ https://www.bfs~ https://www.bf~
+    ##  3 Private househ~ en       Private households~ https://www.bfs~ https://www.bf~
+    ##  4 Private househ~ en       Private households~ https://www.bfs~ https://www.bf~
+    ##  5 Deaths per wee~ en       Deaths per week by~ https://www.bfs~ https://www.bf~
+    ##  6 Deaths per wee~ en       Deaths per week by~ https://www.bfs~ https://www.bf~
+    ##  7 Weekly number ~ en       Weekly number of d~ https://www.bfs~ https://www.bf~
+    ##  8 CPI (december ~ en       CPI (december 2020~ https://www.bfs~ https://www.bf~
+    ##  9 CPI (december ~ en       CPI (december 2020~ https://www.bfs~ https://www.bf~
+    ## 10 CPI, Global in~ en       CPI, Global index ~ https://www.bfs~ https://www.bf~
     ## # ... with 340 more rows
 
 ``` r
@@ -196,7 +196,7 @@ catalog_tables_en %>%
   filter(title == "Admissions to universities of applied sciences at diploma and bachelor level by fields of specialisation") %>%
   pull(url_table) %>%
   openxlsx::read.xlsx(startRow = 2) %>%
-  tibble()
+  as_tibble()
 ```
 
     ## # A tibble: 20 x 73
