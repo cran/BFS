@@ -1,8 +1,18 @@
-# BFS 0.4.0
+# BFS 0.4.3
+* Fixed `bfs_get_catalog_data()` and `bfs_get_catalog_tables()` bug #6.
+* tidyRSS GitHub dependency version is 2.0.5.
+* Add tests for `bfs_get_catalog_*` functions.
 
-* BREAKING CHANGE: `clean_names` of `bfs_get_dataset()` is now FALSE by default.
-* `bfs_get_dataset()` uses BFS API v1.
-* `bfs_get_metadata()` removed because not working. Use only `bfs_get_catalog_data()` for now.
+# BFS 0.4.2
+* Fixed `bfs_get_catalog_data()` and `bfs_get_catalog_tables()` bug #6.
+* tidyRSS dependency version is 2.0.4.
+* Improved README.
+
+# BFS 0.4.1
+
+* BREAKING CHANGE: `clean_names` of `bfs_get_data()` is now FALSE by default.
+* `bfs_get_data()` uses BFS API v1.
+* `bfs_get_metadata()` deprecated. Please use only `bfs_get_catalog_data()`.
 * add `bfs_get_catalog_tables()`.
 * add `bfs_get_catalog()`.
 * pxweb and jsonlite dependency added. dplyr dependency removed.
