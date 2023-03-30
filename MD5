@@ -1,4 +1,4 @@
-45ff2b2f640d497196a1b16c37d226db *DESCRIPTION
+b975a0219c1d4830def78837090bd71e *DESCRIPTION
 a3a0a6e4bb7b13c3bef3a5f7d0734b2c *LICENSE
 b633d8d35c58e2967ce1dabfe73828f0 *NAMESPACE
 7c4407a7632a7aaa51b25f33599755fe *NEWS.md
@@ -19,5 +19,3 @@ d79b4fbca8556a193182a6e7d728ab6d *man/bfs_get_data_comments.Rd
 f6c3b5abc1b2709ba6c5be1d33bf74fb *man/figures/logo_icon.svg
 3a124355f601e24cf2faec91c092bc0c *man/figures/screenshot.png
 418f7d2b8eab83eb49370ec9615dac06 *man/pipe.Rd
-ebbba21137fe1363fcdc5c5a91f66bc9 *tests/testthat.R
-8659c990fa584680fdbfca84cb0c7302 *tests/testthat/test-bfs_get_catalog_data.R
