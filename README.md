@@ -38,15 +38,10 @@ library(BFS)
 
 ### Get the data catalog
 
-To search and download data from the Swiss Federal Statistical Office,
-you first need to retrieve information about the available public
-datasets.
-
-You can get the data catalog by language based on the official [RSS
-feed](https://www.bfs.admin.ch/bfs/en/home/statistiken/kataloge-datenbanken/daten/_jcr_content/par/ws_catalog.rss.xml?skipLimit=true).
-Unfortunately, it seems that not the all public datasets are in the RSS
-feed, but only the most recently udpated. Note also that Italian and
-English give access to less datasets.
+Retrieve the list of publicly available datasets from the [data
+catalog](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/daten.html)
+in any language (“de”, “fr”, “it” or “en”) by calling
+`bfs_get_catalog_data()`.
 
 ``` r
 catalog_data_en <- bfs_get_catalog_data(language = "en")
@@ -54,52 +49,54 @@ catalog_data_en <- bfs_get_catalog_data(language = "en")
 catalog_data_en
 ```
 
-    ## # A tibble: 179 × 5
-    ##    title                                       language published url_bfs url_px
-    ##    <chr>                                       <chr>    <chr>     <chr>   <chr> 
-    ##  1 New registrations of road vehicles by mont… en       New regi… https:… https…
-    ##  2 Hotel accommodation: arrivals and overnigh… en       Hotel ac… https:… https…
-    ##  3 Hotel accommodation: arrivals and overnigh… en       Hotel ac… https:… https…
-    ##  4 Hotel accommodation: arrivals and overnigh… en       Hotel ac… https:… https…
-    ##  5 Hotel sector: Supply and demand of open es… en       Hotel se… https:… https…
-    ##  6 Hotel sector: Supply and demand of open es… en       Hotel se… https:… https…
-    ##  7 Hotel sector: supply and demand of open es… en       Hotel se… https:… https…
-    ##  8 Employees, farmholdings, utilized agricult… en       Employee… https:… https…
-    ##  9 Foreign cross-border commuter by canton of… en       Foreign … https:… https…
-    ## 10 Foreign cross-border commuters by canton o… en       Foreign … https:… https…
-    ## # ℹ 169 more rows
+    ## # A tibble: 180 × 7
+    ##    title   language publication_date    url_bfs url_px guid  catalog_date       
+    ##    <chr>   <chr>    <dttm>              <chr>   <chr>  <chr> <dttm>             
+    ##  1 Provis… en       2023-04-04 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  2 Perman… en       2022-10-06 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  3 Privat… en       2022-10-06 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  4 Deaths… en       2022-09-26 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  5 Divorc… en       2022-09-26 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  6 Live b… en       2022-09-26 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  7 Marria… en       2022-09-26 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  8 Acquis… en       2022-08-25 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ##  9 Acquis… en       2022-08-25 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ## 10 Demogr… en       2022-08-25 08:30:00 https:… https… bfsR… 2023-04-04 08:30:00
+    ## # ℹ 170 more rows
 
-To find older datasets, you can use the search bar in the [official BFS
-website](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/daten.html).
+English and Italian data catalogs offer a limited list of datasets. For
+the full list please get the French (“fr”) or German (“de”) data
+catalogs.
 
-### Search for a specific dataset
+### Download a dataset in any language
 
-You could use for example `dplyr` to search for a given dataset.
+The function `bfs_get_data()` allows you to download any dataset for the
+data catalog.
+
+To download a specific dataset, you can either use the `url_bfs` or the
+`number_bfs`.
+
+The `url_bfs` argument refers to the offical webpage of a dataset. Find
+below an example getting the `url_bfs` for a specific dataset using the
+R package “dplyr”.
 
 ``` r
 library(dplyr)
 
-catalog_data_uni <- catalog_data_en %>%
-  filter(title == "University students by year, ISCED field, sex and level of study")
+url_bfs_uni_students <- catalog_data_en |>
+  dplyr::filter(title == "University students by year, ISCED field, sex and level of study") |>
+  dplyr::pull(url_bfs)
 
-catalog_data_uni
+url_bfs_uni_students
 ```
 
-    ## # A tibble: 1 × 5
-    ##   title                                        language published url_bfs url_px
-    ##   <chr>                                        <chr>    <chr>     <chr>   <chr> 
-    ## 1 University students by year, ISCED field, s… en       Universi… https:… https…
+    ## [1] "https://www.bfs.admin.ch/content/bfs/en/home/statistiken/kataloge-datenbanken/daten.assetdetail.24367729.html"
 
-### Download a dataset in any language
-
-To download a BFS dataset, you have two options. You can add the
-official BFS URL webpage to the `url_bfs` argument to the
-`bfs_get_data()`. For example, you can use the URL of a given dataset
-you found using `bfs_get_catalog_data()`.
+Then you can download the full dataset using `url_bfs`.
 
 ``` r
 # https://www.bfs.admin.ch/content/bfs/en/home/statistiken/kataloge-datenbanken/daten.assetdetail.16324907.html
-df_uni <- bfs_get_data(url_bfs = catalog_data_uni$url_bfs, language = "en")
+df_uni <- bfs_get_data(url_bfs = url_bfs_uni_students, language = "en")
 ```
 
     ##   Downloading large query (in 4 batches):
@@ -124,31 +121,28 @@ df_uni
     ## 10 1980/81 Education science Female Further education, ad…                    52
     ## # ℹ 18,050 more rows
 
-Note that some datasets are only accessible in German and French.
+It is recommended to privilege the use of the `number_bfs` argument for
+stability and reproducibility.
 
-In case the data is not accessible using `bfs_get_catalog_data()`, you
-can manually add the BFS number in the `bfs_get_data()` function using
-the `number_bfs` argument.
+You can manually find the `number_bfs` by opening the official webpage
+and looking for the “FSO number”, as showed below.
 
 ``` r
-# open webpage
-browseURL("https://www.bfs.admin.ch/content/bfs/en/home/statistiken/kataloge-datenbanken/daten.assetdetail.16324907.html")
+# open Uni students dataset webpage
+browseURL(url_bfs_uni_students)
 ```
 
 <img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/screenshot.png" align="center" />
 
 <br/>
 
-Use again `bfs_get_data()` but this time with the `number_bfs` argument.
+Then you can download the dataset using `number_bfs`.
 
 ``` r
 bfs_get_data(number_bfs = "px-x-1502040100_131", language = "en")
 ```
 
-Please privilege the `number_bfs` argument of the `bfs_get_data()` if
-you want more stable and reproducible code.
-
-You can access additional information about the dataset by running
+You can also access additional information about the dataset by running
 `bfs_get_data_comments()`.
 
 ``` r
@@ -172,12 +166,12 @@ You may get an error message if the query is too large.
     The smallest batch size is 24030 and the maximum number of values 
     that can be downloaded through the API is 5000.
 
-You may also have an error the API calls too many requests.
+You may also have an error if the API calls too many requests.
 
     Error in pxweb_advanced_get(url = url, query = query, verbose = verbose) : 
       Too Many Requests (RFC 6585) (HTTP 429).
 
-One solution is too query only specific elements of the dataset to
+One solution is to query only specific elements of the dataset to
 download less data. Here an example.
 
 First you want to get the variable names, i.e. `code`, and categories,
@@ -185,28 +179,39 @@ i.e. `values`, of your dataset.
 
 ``` r
 # choose a BFS number and language
-bfs_get_metadata(number_bfs = "px-x-1502040100_131", language = "en")
+metadata <- bfs_get_metadata(number_bfs = "px-x-1502040100_131", language = "en")
+
+str(metadata)
 ```
 
-    ## # A tibble: 4 × 6
-    ##   code         text           values     valueTexts time  elimination
-    ##   <chr>        <chr>          <list>     <list>     <lgl> <lgl>      
-    ## 1 Jahr         Year           <chr [43]> <chr [43]> TRUE  NA         
-    ## 2 ISCED Fach   ISCED Field    <chr [42]> <chr [42]> NA    TRUE       
-    ## 3 Geschlecht   Sex            <chr [2]>  <chr [2]>  NA    TRUE       
-    ## 4 Studienstufe Level of study <chr [5]>  <chr [5]>  NA    TRUE
+    ## tibble [4 × 7] (S3: tbl_df/tbl/data.frame)
+    ##  $ code       : chr [1:4] "Jahr" "ISCED Fach" "Geschlecht" "Studienstufe"
+    ##  $ text       : chr [1:4] "Year" "ISCED Field" "Sex" "Level of study"
+    ##  $ values     :List of 4
+    ##   ..$ : chr [1:43] "0" "1" "2" "3" ...
+    ##   ..$ : chr [1:42] "0" "1" "2" "3" ...
+    ##   ..$ : chr [1:2] "0" "1"
+    ##   ..$ : chr [1:5] "0" "1" "2" "3" ...
+    ##  $ valueTexts :List of 4
+    ##   ..$ : chr [1:43] "1980/81" "1981/82" "1982/83" "1983/84" ...
+    ##   ..$ : chr [1:42] "Education science" "Teacher training without subject specialisation" "Teacher training with subject specialisation" "Fine arts" ...
+    ##   ..$ : chr [1:2] "Male" "Female"
+    ##   ..$ : chr [1:5] "First university degree or diploma" "Bachelor" "Master" "Doctorate" ...
+    ##  $ time       : logi [1:4] TRUE NA NA NA
+    ##  $ elimination: logi [1:4] NA TRUE TRUE TRUE
+    ##  $ title      : chr [1:4] "University students by Year, ISCED Field, Sex and Level of study" "University students by Year, ISCED Field, Sex and Level of study" "University students by Year, ISCED Field, Sex and Level of study" "University students by Year, ISCED Field, Sex and Level of study"
 
 Then you can manually select the dimensions of the dataset you want to
 query.
 
 ``` r
 # Manually create BFS query dimensions
-# Use `code` and `values` elements in `px_meta$variables`
+# Use `code` and `values` elements
 # Use "*" to select all
 dimensions <- list(
   "Jahr" = c("40", "41"),
   "ISCED Fach" = c("0"),
-  "Geschlecht" = c("0", "1"),
+  "Geschlecht" = c("*"),
   "Studienstufe" = c("2", "3"))
 
 # Query BFS data with specific dimensions
@@ -232,92 +237,70 @@ BFS::bfs_get_data(
 ### Catalog of tables
 
 A lot of tables are not accessible through the official API, but they
-are still present in the official BFS website. You can access the [RSS
-feed tables
-catalog](https://www.bfs.admin.ch/bfs/en/home/statistiken/kataloge-datenbanken/tabellen/_jcr_content/par/ws_catalog.rss.xml?skipLimit=true)
-using `bfs_get_catalog_tables()`. Most of these tables are Excel or CSV
-files. Note again that only a part of all the public tables accessible
-are in the RSS feed (the most recently updated datasets).
+are still present in the [official BFS
+website](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/tabellen.html).
+You can search for specific tables using `bfs_get_catalog_tables()`.
 
 ``` r
-catalog_tables_en <- bfs_get_catalog_tables(language = "en")
+catalog_tables_en_students <- bfs_get_catalog_tables(language = "en", title = "students")
 
-catalog_tables_en
+catalog_tables_en_students
 ```
 
-    ## # A tibble: 350 × 5
-    ##    title                                    language published url_bfs url_table
-    ##    <chr>                                    <chr>    <chr>     <chr>   <chr>    
-    ##  1 Deaths per week by 5-year age group, se… en       Deaths p… https:… https://…
-    ##  2 Deaths per week by 5-year age group, se… en       Deaths p… https:… https://…
-    ##  3 Weekly number of deaths, 2010-2023       en       Weekly n… https:… https://…
-    ##  4 Employed persons (domestic concept) tot… en       Employed… https:… https://…
-    ##  5 Employed persons working in Switzerland  en       Employed… https:… https://…
-    ##  6 Index values, 1st quarter 2019 - 1st qu… en       Index va… https:… https://…
-    ##  7 Rates of change compared with the previ… en       Rates of… https:… https://…
-    ##  8 Rates of change compared with the same … en       Rates of… https:… https://…
-    ##  9 Statistical key figure, 1st quarter 202… en       Statisti… https:… https://…
-    ## 10 The weights of the subindices: Weights … en       The weig… https:… https://…
-    ## # ℹ 340 more rows
+    ## # A tibble: 5 × 7
+    ##   title language publication_date    url_bfs url_table guid  catalog_date       
+    ##   <chr> <chr>    <dttm>              <chr>   <chr>     <chr> <dttm>             
+    ## 1 Stud… en       2023-04-05 00:00:00 https:… https://… bfsR… 2023-04-05 00:00:00
+    ## 2 Stud… en       2023-04-05 00:00:00 https:… https://… bfsR… 2023-04-05 00:00:00
+    ## 3 Stud… en       2023-03-28 08:30:00 https:… https://… bfsR… 2023-04-05 00:00:00
+    ## 4 Stud… en       2023-03-28 08:30:00 https:… https://… bfsR… 2023-04-05 00:00:00
+    ## 5 Stud… en       2023-03-28 08:30:00 https:… https://… bfsR… 2023-04-05 00:00:00
+
+Most of the BFS tables are Excel or CSV files. For example, you can use
+the “openxlsx” R package to read a specific Excel table using the
+`url_table` column.
 
 ``` r
 library(dplyr)
 library(openxlsx)
 
-index_table_url <- catalog_tables_en %>%
-  filter(grepl("index", title)) %>% # search table
-  slice(1) %>%
-  pull(url_table)
+tables_bfs_uni_students <- catalog_tables_en_students |>
+  dplyr::slice(3) |>
+  dplyr::pull(url_table)
 
-df <- tryCatch(expr = openxlsx::read.xlsx(index_table_url, startRow = 1),
-    error = function(e) "Failed reading table") %>%
-  as_tibble()
+df_table <- tryCatch(expr = openxlsx::read.xlsx(tables_bfs_uni_students, startRow = 1),
+    error = function(e) "Failed reading table") |>
+  dplyr::as_tibble()
 
-df
+df_table
 ```
 
-    ## # A tibble: 33 × 19
-    ##    Sprache./.Langue./.Li…¹ X2    X3    X4    X5    X6    X7    X8    X9    X10  
-    ##    <chr>                   <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr>
-    ##  1 "Indexwerte, 1. Quarta…  <NA> <NA>  <NA>  <NA>  <NA>  <NA>  <NA>  <NA>  <NA> 
-    ##  2 "Schweizerischer Wohni…  <NA> <NA>  <NA>  <NA>  <NA>  <NA>  <NA>  <NA>  <NA> 
-    ##  3  <NA>                   "Woh… <NA>  <NA>  <NA>  <NA>  <NA>  Einf… <NA>  <NA> 
-    ##  4 "Totalindex und Subind… "Tot… Geme… Geme… Geme… Geme… Geme… EFH   Geme… Geme…
-    ##  5 "Q1 2019"               "97.… 95.5… 98.1… 97.7… 99.6… 97.7… 97.0… 95.2… 97.1…
-    ##  6 "Q2 2019"               "98.… 97.7… 98.7… 99.1… 98.3… 97.1… 98.2… 98.1… 98.2…
-    ##  7 "Q3 2019"               "98.… 96.9… 100.… 98.0… 98.7… 97.5… 98.5… 97.4… 100.…
-    ##  8 "Q4 2019"               "100" 100   100   100   100   100   100   100   100  
-    ##  9 "Q1 2020"               "99.… 98.8… 99.2… 98.3… 100.… 99.1… 99.4… 100.… 99.1…
-    ## 10 "Q2 2020"               "100… 100.… 100.… 99.8… 100.… 99.8… 100.… 100.… 100.…
-    ## # ℹ 23 more rows
-    ## # ℹ abbreviated name: ¹​`Sprache./.Langue./.Lingua./.Language`
-    ## # ℹ 9 more variables: X11 <chr>, X12 <chr>, X13 <chr>, X14 <chr>, X15 <chr>,
-    ## #   X16 <chr>, X17 <chr>, X18 <chr>, X19 <chr>
+    ## # A tibble: 6 × 2
+    ##   Students.at.Universities.and.Institutes.of.Technology.(UIT).2022/23:.S…¹ X2   
+    ##   <chr>                                                                    <chr>
+    ## 1 "Definitions "                                                           Defi…
+    ## 2 "Tab 1"                                                                  Entr…
+    ## 3 "Tab 2"                                                                  Stud…
+    ## 4 "Tab 3"                                                                  Stud…
+    ## 5 "Tab 4"                                                                  Stud…
+    ## 6 "Tab 5"                                                                  Fore…
+    ## # ℹ abbreviated name:
+    ## #   ¹​`Students.at.Universities.and.Institutes.of.Technology.(UIT).2022/23:.Standard.Tables`
 
 ## Main dependencies of the package
 
-Under the hood, this package is using extensively the
+Under the hood, this package is using the
 <a href="https://ropengov.github.io/pxweb/index.html"
-target="_blank">pxweb</a> R package to query the Swiss Federal
-Statistical Office PXWEB API. PXWEB is an API structure developed by
-Statistics Sweden and other national statistical institutions (NSI) to
-disseminate public statistics in a structured way.
-
-The list of available datasets is accessed using the
-<a href="https://github.com/RobertMyles/tidyRSS"
-target="_blank">tidyRSS</a> R package to scrap the official [BFS RSS
-feed](https://www.bfs.admin.ch/bfs/en/home/statistiken/kataloge-datenbanken/daten/_jcr_content/par/ws_catalog.rss.xml?skipLimit=true).
+target="_blank">pxweb</a> package to query the Swiss Federal Statistical
+Office PXWEB API. PXWEB is an API structure developed by Statistics
+Sweden and other national statistical institutions (NSI) to disseminate
+public statistics in a structured way.
 
 You can clean the column names of the datasets automatically using
 `janitor::clean_names()` by adding the argument `clean_names = TRUE` in
 the `bfs_get_data()` function.
 
 ## Other information
-
-A [blog
-article](https://felixluginbuhl.com/blog/posts/2019-11-07-swiss-data/)
-showing a concrete example about how to use the BFS package and to
-visualize the data in a Swiss map.
 
 This package is in no way officially related to or endorsed by the Swiss
 Federal Statistical Office (BFS).
