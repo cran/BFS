@@ -1,4 +1,4 @@
-#' Download geographic data from the Swiss Confederation
+#' Download a geographic file from the Swiss geo-portal
 #' 
 #' Download assets from the STAC API on the geodata catalog 
 #' of the Swiss Confederation (\url{https://data.geo.admin.ch/api/stac/v0.9/}).
@@ -14,6 +14,8 @@
 #' @param asset_names asset_names
 #' @param datetime datetime
 #' @param feature_id feature_id
+#' 
+#' @importFrom magrittr %>%
 #' 
 #' @export
 bfs_download_geodata <- function(

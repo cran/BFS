@@ -1,15 +1,18 @@
-#' Download BFS data in a given language
+#' Get BFS data in a given language
 #'
-#' Download a dataset using the BFS offical API v1. You should choose either the bfs number of the bfs offical url
+#' Get a dataset using the PXWEB API v1. 
+#' You should choose either the BFS number (FSO number) of the BFS offical url
 #' of a given dataset. You can query particulary variables using the `query` argument.
 #'
-#' @param number_bfs The BFS number of a dataset.
+#' @param number_bfs The BFS number (FSO number) of a dataset.
 #' @param language Language of the dataset to be translated if exists, i.e. "de", "fr", "it" or "en".
 #' @param url_bfs The URL page of a dataset.
 #' @param query A list with named values, a json query file or json query string using \code{pxweb::pxweb_query()}.
 #' @param column_name_type Column name type as "text" or as "code".
 #' @param variable_value_type Variable value type as "text" or as "code".
 #' @param clean_names Clean column names using \code{janitor::clean_names()}.
+#'
+#' @importFrom magrittr %>%
 #'
 #' @seealso \code{\link{bfs_get_data_comments}}
 #'

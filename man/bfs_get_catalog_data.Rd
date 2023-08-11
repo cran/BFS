@@ -2,7 +2,7 @@
 % Please edit documentation in R/bfs_get_catalog_data.R
 \name{bfs_get_catalog_data}
 \alias{bfs_get_catalog_data}
-\title{Get the BFS data catalog}
+\title{Get the BFS geo-portal data catalog}
 \usage{
 bfs_get_catalog_data(
   language = "de",
@@ -48,10 +48,10 @@ dplyr packages).
   \item{title}{A character column with the title of the BFS dataset}
   \item{language}{A character column with the language of the BFS dataset}
   \item{publication_date}{The published date of the BFS dataset in the data catalog}
+  \item{number_asset}{The BFS asset number}
   \item{url_bfs}{A character column with the URL of the related BFS 
   webpage}
   \item{url_px}{A character column with the URL of the PX file}
-  \item{guid}{Globally Unique Identifier from the item from the RSS document}
   \item{catalog_date}{The released date of the current BFS data catalog}
 }
 }
