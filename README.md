@@ -380,38 +380,65 @@ argument.
 
 You can get [cartographic base
 maps](https://www.bfs.admin.ch/bfs/en/home/statistics/regional-statistics/base-maps/cartographic-bases.assetdetail.24025646.html)
-from the ThemaKart project using `bfs_get_base_maps()`. For instance you
-can get the communes and main lakes. The list of available geometries in
-the [official
+from the ThemaKart project using `bfs_get_base_maps()`. The list of
+available geometries in the [official
 documentation](https://www.bfs.admin.ch/asset/en/24025645).
+
+The default arguments of `bfs_get_base_maps()` can be change to access
+specific files:
+
+``` r
+# default arguments
+bfs_get_base_maps(
+  geom = NULL,
+  category = "gf", # "gf" for total area (i.e. "Gesamtflaeche")
+  type = "Poly",
+  date = NULL,
+  most_recent = TRUE, #get most recent file by default
+  format = "shp",
+  asset_number = "24025646" #change to get older ThemaKart data
+)
+```
+
+A typical base maps ThemaKart file looks like this:
+
+<img style="border:0px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/base_maps_file.png" align="center" />
 
 ``` r
 # list of geometry names: https://www.bfs.admin.ch/asset/en/24025645
-#switzerland_sf <- bfs_get_base_maps(geom = "suis")
-#cantons_sf <- bfs_get_base_maps(geom = "kant")
+switzerland_sf <- bfs_get_base_maps(geom = "suis")
 communes_sf <- bfs_get_base_maps(geom = "polg", date = "20230101")
+districts_sf <- bfs_get_base_maps(geom = "bezk")
+cantons_sf <- bfs_get_base_maps(geom = "kant")
+cantons_capitals_sf <- bfs_get_base_maps(geom = "stkt", type = "Pnts", category = "kk")
 lakes_sf <- bfs_get_base_maps(geom = "seen", category = "11")
 
 library(ggplot2)
 
 ggplot() + 
-  geom_sf(data = communes_sf) + 
-  # add lakes
-  geom_sf(
-    data = lakes_sf,
-    fill = "lightblue4",
-    color = "lightblue4"
-  ) +
+  geom_sf(data = communes_sf, fill = "snow", color = "grey45") + 
+  geom_sf(data = lakes_sf, fill = "lightblue2", color = "black") +
+  geom_sf(data = districts_sf, fill = "transparent", color = "grey65") + 
+  geom_sf(data = cantons_sf, fill = "transparent", color = "black") +
+  geom_sf(data = cantons_capitals_sf, shape = 18, size = 3) +
   theme_minimal() +
-  labs(caption = "Source: BFS ThemaKart - www.bfs.admin.ch")
+  theme(axis.text = element_blank()) +
+  labs(caption = "Source: ThemaKart, © BFS")
 ```
 
-<img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/communes_themakart.png" align="center" />
+<img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/base_maps.png" align="center" />
 
 ### Swiss Official Commune Register
 
 The package also contains the official Swiss official commune registers
-for different administrative levels.
+for different administrative levels:
+
+- `register_gde`
+- `register_gde_other`
+- `register_bzn`
+- `register_kt`
+- `register_kt_seeanteile`
+- `register_dic`
 
 ``` r
 # commune register data
@@ -432,6 +459,43 @@ BFS::register_gde
     ##  9 ZH        101     9 Mettmenstetten     Mettmenstet… Bezirk… Zürich  1848-09-…
     ## 10 ZH        101    10 Obfelden           Obfelden     Bezirk… Zürich  1848-09-…
     ## # ℹ 2,126 more rows
+
+You can use registers to ease geodata analysis.
+
+``` r
+library(dplyr)
+library(sf)
+
+communes_sf <- bfs_get_base_maps(geom = "polg", date = "20230101")
+
+communes_ge <- communes_sf |>
+  inner_join(BFS::register_gde |> 
+               filter(GDEKTNA == "Genève"), 
+             by = c("id" = "GDENR"))
+
+bbox_ge <- sf::st_bbox(communes_ge)
+
+lake_leman <- bfs_get_base_maps(geom = "seen", category = "11") |>
+  filter(name == "Lac Léman")
+
+communes_ge |> 
+  ggplot() + 
+  geom_sf(data = lake_leman, fill = "lightblue2", color = "grey65") +
+  geom_sf(fill = "snow", color = "grey65") + 
+  geom_sf_text(aes(label = name), size = 3, check_overlap = T) + 
+  # bounding box
+  coord_sf(
+    xlim = c(bbox_ge$xmin, bbox_ge$xmax),
+    ylim = c(bbox_ge$ymin, bbox_ge$ymax)
+  ) +
+  theme_minimal() +
+  theme(axis.text = element_blank()) +
+  labs(title = "Communes du canton de Genève",
+       x = NULL, y = NULL, 
+       caption = "Source: ThemaKart, © BFS")
+```
+
+<img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/base_maps_ge.png" align="center" />
 
 ## Main dependencies of the package
 
