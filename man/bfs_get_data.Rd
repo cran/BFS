@@ -5,21 +5,19 @@
 \title{Get BFS data in a given language}
 \usage{
 bfs_get_data(
-  number_bfs = NULL,
+  number_bfs,
   language = "de",
-  url_bfs = NULL,
   query = NULL,
   column_name_type = "text",
   variable_value_type = "text",
-  clean_names = FALSE
+  clean_names = FALSE,
+  delay = NULL
 )
 }
 \arguments{
 \item{number_bfs}{The BFS number (FSO number) of a dataset.}
 
 \item{language}{Language of the dataset to be translated if exists, i.e. "de", "fr", "it" or "en".}
-
-\item{url_bfs}{The URL page of a dataset.}
 
 \item{query}{A list with named values, a json query file or json query string using \code{pxweb::pxweb_query()}.}
 
@@ -28,6 +26,8 @@ bfs_get_data(
 \item{variable_value_type}{Variable value type as "text" or as "code".}
 
 \item{clean_names}{Clean column names using \code{janitor::clean_names()}.}
+
+\item{delay}{Integer Number of seconds to wait before query using \code{Sys.sleep()}.}
 }
 \value{
 A tbl_df (a type of data frame; see tibble or
