@@ -9,14 +9,15 @@ total](https://cranlogs.r-pkg.org/badges/grand-total/BFS)](https://cran.r-projec
 [![R-CMD-check](https://github.com/lgnbhl/BFS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lgnbhl/BFS/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/lgnbhl/BFS/branch/master/graph/badge.svg)](https://app.codecov.io/gh/lgnbhl/BFS?branch=master)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Follow-E4405F?style=social&logo=linkedin)](https://www.linkedin.com/in/FelixLuginbuhl/)
 <!-- badges: end -->
 
 # BFS <img src="man/figures/logo.png" align="right" height="138" />
 
 > Search and download data from the Swiss Federal Statistical Office
 
-The `BFS` package allows to search and download public data from the <a
-href="https://www.bfs.admin.ch/bfs/en/home/statistics/catalogues-databases/data.html"
+The `BFS` package allows to search and download public data from the
+<a href="https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html"
 target="_blank">Swiss Federal Statistical Office</a> (BFS stands for
 *Bundesamt für Statistik* in German) APIs in a dynamic and reproducible
 way.
@@ -42,126 +43,88 @@ library(BFS)
 ### Get the data catalog
 
 Retrieve the list of publicly available datasets from the [data
-catalog](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/daten.html)
+catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html)
 in any language (“de”, “fr”, “it” or “en”) by calling
 `bfs_get_catalog_data()`.
 
 ``` r
-catalog_data_en <- bfs_get_catalog_data(language = "en")
-
-catalog_data_en
+bfs_get_catalog_data(language = "en")
 ```
 
-    ## # A tibble: 184 × 7
-    ##    title                language publication_date    number_asset url_bfs url_px
-    ##    <chr>                <chr>    <dttm>                     <dbl> <chr>   <chr> 
-    ##  1 Acknowledgment of p… en       2023-06-22 08:30:00     25945442 https:… https…
-    ##  2 Adoptions by differ… en       2023-06-22 08:30:00     25945406 https:… https…
-    ##  3 Deaths by instituti… en       2023-06-22 08:30:00     25945423 https:… https…
-    ##  4 Deaths by sex, citi… en       2023-06-22 08:30:00     25945436 https:… https…
-    ##  5 Deaths since 1803    en       2023-06-22 08:30:00     25945437 https:… https…
-    ##  6 Dissolved partnersh… en       2023-06-22 08:30:00     25945438 https:… https…
-    ##  7 Divorces by canton,… en       2023-06-22 08:30:00     25945378 https:… https…
-    ##  8 Divorces by duratio… en       2023-06-22 08:30:00     25945381 https:… https…
-    ##  9 Divorces by institu… en       2023-06-22 08:30:00     25945387 https:… https…
-    ## 10 Live births by inst… en       2023-06-22 08:30:00     25945410 https:… https…
-    ## # ℹ 174 more rows
-    ## # ℹ 1 more variable: catalog_date <dttm>
+    ## # A tibble: 202 × 8
+    ##    title                  language publication_date number_asset order_nr url_px
+    ##    <chr>                  <chr>    <date>           <chr>        <chr>    <chr> 
+    ##  1 Air emissions account… en       2024-09-26       32331273     px-x-02… https…
+    ##  2 Deaths per month and … en       2024-09-26       32331273     px-x-01… https…
+    ##  3 Divorces and divortia… en       2024-09-26       32331273     px-x-01… https…
+    ##  4 Energy accounts of ec… en       2024-09-26       32331273     px-x-02… https…
+    ##  5 Live births per month… en       2024-09-26       32331273     px-x-01… https…
+    ##  6 Marriages and nuptial… en       2024-09-26       32331273     px-x-01… https…
+    ##  7 New registrations of … en       2024-09-16       32331273     px-x-11… https…
+    ##  8 Hotel sector: arrival… en       2024-09-05       32331273     px-x-10… https…
+    ##  9 Hotel sector: arrival… en       2024-09-05       32331273     px-x-10… https…
+    ## 10 Hotel sector: arrival… en       2024-09-05       32331273     px-x-10… https…
+    ## # ℹ 192 more rows
+    ## # ℹ 2 more variables: language_available <list>, url_structure_json <chr>
 
 You can search in the data catalog using the following arguments:
 
 - `language`: The language of a BFS catalog, i.e. “de”, “fr”, “it” or
   “en”.
 - `title`: to search in title, subtitle and supertitle.
+- `extended_search`: extended search in (sub/super)title, orderNr,
+  summary, shortSummary, shortTextGNP.
 - `spatial_division`: choose between “Switzerland”, “Cantons”,
   “Districts”, “Communes”, “Other spatial divisions” or “International”.
-- `prodima`: by specific BFS themes using one or multiple prodima
-  numbers.
+- `prodima`: by specific BFS themes using a unique prodima number.
 - `inquiry`: by inquiry number.
 - `institution`: by institution.
 - `publishing_year_start`: by publishing year start.
 - `publishing_year_end`: by publishing year end.
 - `order_nr`: by BFS Number (FSO number).
 
-For example, you can search data related to students:
+For example, you can search data related to students using the extend
+search:
 
 ``` r
-bfs_get_catalog_data(language = "en", title = "students")
+catalog_student <- bfs_get_catalog_data(language = "en", extended_search = "student")
+
+catalog_student
 ```
 
-    ## # A tibble: 4 × 7
-    ##   title                 language publication_date    number_asset url_bfs url_px
-    ##   <chr>                 <chr>    <dttm>                     <dbl> <chr>   <chr> 
-    ## 1 University of applie… en       2023-03-28 08:30:00     24367605 https:… https…
-    ## 2 University of applie… en       2023-03-28 08:30:00     24367607 https:… https…
-    ## 3 University students … en       2023-03-28 08:30:00     24367723 https:… https…
-    ## 4 University students … en       2023-03-28 08:30:00     24367729 https:… https…
-    ## # ℹ 1 more variable: catalog_date <dttm>
+    ## # A tibble: 4 × 8
+    ##   title                   language publication_date number_asset order_nr url_px
+    ##   <chr>                   <chr>    <date>           <chr>        <chr>    <chr> 
+    ## 1 University of applied … en       2024-03-28       31306033     px-x-15… https…
+    ## 2 University of applied … en       2024-03-28       31306033     px-x-15… https…
+    ## 3 University students by… en       2024-03-28       31306033     px-x-15… https…
+    ## 4 University students by… en       2024-03-28       31306033     px-x-15… https…
+    ## # ℹ 2 more variables: language_available <list>, url_structure_json <chr>
+
+Note the the BFS number (FSO number) is available in column `order_nr`.
 
 English (“en”) and Italian (“it”) data catalogs offer a limited list of
 datasets. For the full list please get the French (“fr”) or German
-(“de”) data catalogs.
+(“de”) data catalogs (see `language_available` column).
 
 ### Download data in any language
 
 The function `bfs_get_data()` allows you to download any dataset from
 the [data
-catalog](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/daten.html)
+catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html)
 using its BFS number (FSO number).
 
-You need first to find the asset number of the dataset.
+Using the `number_bfs` argument (FSO number), you can get BFS data in a
+given language (“en”, “de”, “fr” or “it”) from the official PXWeb API of
+the Swiss Federal Statistical Office.
 
 ``` r
-library(dplyr) #install.packages("dplyr")
+#catalog_student$order_nr[1] # px-x-1502040100_131
 
-asset_number_students <- bfs_get_catalog_data(language = "en", title = "students") |>
-  dplyr::filter(title == "University students by year, ISCED field, sex and level of study") |>
-  dplyr::pull(number_asset)
-
-asset_number_students
+bfs_get_data(number_bfs = "px-x-1502040100_131", language = "en")
 ```
 
-    ## [1] 24367729
-
-You can then find the BFS number by calling `bfs_get_asset_metadata()`.
-This function returns a list containing the metadata of the asset. For
-the student data, the BFS number is in the `orderNR` variable.
-
-``` r
-asset_meta_students <- bfs_get_asset_metadata(number_asset = asset_number_students)
-
-bfs_number_students <- asset_meta_students$shop$orderNr
-
-bfs_number_students
-```
-
-    ## [1] "px-x-1502040100_131"
-
-You can also manually find the BFS number (FSO number) by opening the
-related URL official webpage.
-
-``` r
-url_bfs_students <- bfs_get_catalog_data(language = "en", title = "students") |>
-  dplyr::filter(title == "University students by year, ISCED field, sex and level of study") |>
-  dplyr::pull(url_bfs)
-
-# open students dataset webpage
-browseURL(url_bfs_students)
-```
-
-<img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/stat-tab.png" align="center" />
-
-<br/>
-
-Finally you can get the data using the `number_bfs` argument in a given
-language (“en”, “de”, “fr” or “it”) from the official PXWeb API of the
-Swiss Federal Statistical Office.
-
-``` r
-bfs_get_data(number_bfs = bfs_number_students, language = "en")
-```
-
-    ## # A tibble: 18,060 × 5
+    ## # A tibble: 18,480 × 5
     ##    Year    `ISCED Field`     Sex    `Level of study`       `University students`
     ##    <chr>   <chr>             <chr>  <chr>                                  <dbl>
     ##  1 1980/81 Education science Male   First university degr…                   545
@@ -174,7 +137,7 @@ bfs_get_data(number_bfs = bfs_number_students, language = "en")
     ##  8 1980/81 Education science Female Master                                     0
     ##  9 1980/81 Education science Female Doctorate                                 70
     ## 10 1980/81 Education science Female Further education, ad…                    52
-    ## # ℹ 18,050 more rows
+    ## # ℹ 18,470 more rows
 
 ### “Too Many Requests” error message
 
@@ -233,13 +196,7 @@ library(dplyr)
 library(tidyr) # for unnest_longer
 
 metadata_tidy <- metadata |>
-  select(-valueTexts) |>
-  unnest_longer(values) |>
-  mutate(valueTexts = metadata |>
-           select(valueTexts) |>
-           unnest_longer(valueTexts) |>
-           pull(valueTexts)) |>
-  select(code, text, values, valueTexts, everything())
+  unnest_longer(c(values, valueTexts))
 
 metadata_tidy
 ```
@@ -331,7 +288,7 @@ BFS::bfs_get_data(
 
 A lot of datasets are not accessible through the official PXWeb API.
 They are listed in the [catalog of
-tables](https://www.bfs.admin.ch/bfs/de/home/statistiken/kataloge-datenbanken/tabellen.html).
+tables](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html).
 You can search for specific tables using `bfs_get_catalog_tables()`.
 
 ``` r
@@ -430,6 +387,22 @@ unzip(borders_g1_path[4], exdir = "borders_G1")
 By default, the files are downloaded in a temporary directory. You can
 specify the folder where saving the files using the `output_dir`
 argument.
+
+Some layers are accessible using WMS (Web Map Service):
+
+``` r
+library(leaflet)
+
+leaflet() %>% 
+  setView(lng = 8, lat = 46.8, zoom = 8) %>%
+  addWMSTiles(
+    baseUrl = "https://wms.geo.admin.ch/?", 
+    layers = "ch.bfs.generalisierte-grenzen_agglomerationen_g2",
+    options = WMSTileOptions(format = "image/png", transparent = TRUE),
+    attribution = "Generalised borders G1 © 2024 BFS")
+```
+
+<img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/leaflet_g1.png" align="center" />
 
 ### Cartographic base maps
 
