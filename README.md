@@ -42,31 +42,24 @@ library(BFS)
 
 ### Get the data catalog
 
-Retrieve the list of publicly available datasets from the [data
-catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html)
-in any language (“de”, “fr”, “it” or “en”) by calling
-`bfs_get_catalog_data()`.
+Before downloading a BFS dataset, you need to get its related BFS number
+(FSO number) in the [official data
+catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html).
+You can search in the catalog directly from R using the
+`bfs_get_catalog_data()` function in any language (“de”, “fr”, “it” or
+“en”):
 
 ``` r
-bfs_get_catalog_data(language = "en")
+bfs_get_catalog_data(language = "en", extended_search = "student")
 ```
 
-    ## # A tibble: 202 × 9
-    ##    title                  language number_asset publication_date order_nr url_px
-    ##    <chr>                  <chr>    <chr>        <date>           <chr>    <chr> 
-    ##  1 Air emissions account… en       32331273     2024-09-26       px-x-02… https…
-    ##  2 Deaths per month and … en       32506839     2024-09-26       px-x-01… https…
-    ##  3 Divorces and divortia… en       32506841     2024-09-26       px-x-01… https…
-    ##  4 Energy accounts of ec… en       32331272     2024-09-26       px-x-02… https…
-    ##  5 Live births per month… en       32506840     2024-09-26       px-x-01… https…
-    ##  6 Marriages and nuptial… en       32506838     2024-09-26       px-x-01… https…
-    ##  7 New registrations of … en       32466294     2024-09-16       px-x-11… https…
-    ##  8 Hotel sector: arrival… en       32427368     2024-09-05       px-x-10… https…
-    ##  9 Hotel sector: arrival… en       32427369     2024-09-05       px-x-10… https…
-    ## 10 Hotel sector: arrival… en       32427370     2024-09-05       px-x-10… https…
-    ## # ℹ 192 more rows
-    ## # ℹ 3 more variables: language_available <list>, url_structure_json <chr>,
-    ## #   damId <int>
+    ## # A tibble: 4 × 6
+    ##   title                 language number_bfs number_asset publication_date url_px
+    ##   <chr>                 <chr>    <chr>      <chr>        <date>           <chr> 
+    ## 1 University of applie… en       px-x-1502… 31306033     2024-03-28       https…
+    ## 2 University of applie… en       px-x-1502… 31306029     2024-03-28       https…
+    ## 3 University students … en       px-x-1502… 31305852     2024-03-28       https…
+    ## 4 University students … en       px-x-1502… 31305854     2024-03-28       https…
 
 You can search in the data catalog using the following arguments:
 
@@ -83,46 +76,128 @@ You can search in the data catalog using the following arguments:
 - `publishing_year_start`: by publishing year start.
 - `publishing_year_end`: by publishing year end.
 - `order_nr`: by BFS Number (FSO number).
+- `limit`: limit of query results (API limit seems to be 350)
+- `article_model_group`: article model group
+- `article_model`: article model
 
-For example, you can search data related to students using the extend
-search:
+Note that English (“en”) and Italian (“it”) data catalogs offer a
+limited list of datasets. For the full list please get the French (“fr”)
+or German (“de”) data catalogs (see `language_available` column).
+
+To return all the catalog metadata in the raw (uncleaned) structure, you
+can add `return_raw = TRUE`:
 
 ``` r
-catalog_student <- bfs_get_catalog_data(language = "en", extended_search = "student")
+catalog_raw <- bfs_get_catalog_data(
+  language = "en", 
+  extended_search = "student", 
+  return_raw = TRUE
+)
 
-catalog_student
+catalog_raw
 ```
 
-    ## # A tibble: 4 × 9
-    ##   title                   language number_asset publication_date order_nr url_px
-    ##   <chr>                   <chr>    <chr>        <date>           <chr>    <chr> 
-    ## 1 University of applied … en       31306033     2024-03-28       px-x-15… https…
-    ## 2 University of applied … en       31306029     2024-03-28       px-x-15… https…
-    ## 3 University students by… en       31305852     2024-03-28       px-x-15… https…
-    ## 4 University students by… en       31305854     2024-03-28       px-x-15… https…
-    ## # ℹ 3 more variables: language_available <list>, url_structure_json <chr>,
-    ## #   damId <int>
+    ## # A tibble: 4 × 5
+    ##   ids$uuid      $contentId bfs$embargo description$titles$m…¹ shop$orderNr links
+    ##   <chr>              <int> <chr>       <chr>                  <chr>        <lis>
+    ## 1 9cb3291f-425…    2301224 2024-03-28… University of applied… px-x-150204… <df> 
+    ## 2 8f65763b-907…    2301215 2024-03-28… University of applied… px-x-150204… <df> 
+    ## 3 4fd81856-d35…    2301207 2024-03-28… University students b… px-x-150204… <df> 
+    ## 4 7d7f1b9e-0c6…    2301195 2024-03-28… University students b… px-x-150204… <df> 
+    ## # ℹ abbreviated name: ¹​description$titles$main
+    ## # ℹ 14 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
+    ## #   bfs$lifecycle <df[,4]>, $lifecycleGroup <chr>, $provisional <lgl>,
+    ## #   $articleModel <df[,4]>, $articleModelGroup <df[,4]>,
+    ## #   description$categorization <df[,13]>, $bibliography <df[,1]>,
+    ## #   $shortSummary <df[,2]>, $language <chr>, $abstractShort <chr>,
+    ## #   shop$stock <lgl>
 
-Note the the BFS number (FSO number) is available in column `order_nr`.
+The data catalog in a raw structure returns a data.frame containing
+nested data.frames in some columns. Here an example to get the
+`description` nested data.frame as a tibble:
 
-English (“en”) and Italian (“it”) data catalogs offer a limited list of
-datasets. For the full list please get the French (“fr”) or German
-(“de”) data catalogs (see `language_available` column).
+``` r
+library(dplyr)
+
+as_tibble(catalog_raw$description)
+```
+
+    ## # A tibble: 4 × 6
+    ##   titles$main       categorization$colle…¹ bibliography$period shortSummary$html
+    ##   <chr>             <list>                 <chr>               <chr>            
+    ## 1 University of ap… <df [2 × 4]>           1997-2023           This dataset pre…
+    ## 2 University of ap… <df [2 × 4]>           1997-2023           This dataset pre…
+    ## 3 University stude… <df [2 × 4]>           1990-2023           This dataset pre…
+    ## 4 University stude… <df [2 × 4]>           1980-2023           This dataset pre…
+    ## # ℹ abbreviated name: ¹​categorization$collection
+    ## # ℹ 15 more variables: categorization$prodima <list>, $inquiry <list>,
+    ## #   $spatialdivision <list>, $classification <list>, $institution <list>,
+    ## #   $publisher <list>, $tags <list>, $dataSource <list>, $copyrights <list>,
+    ## #   $termsOfUse <list>, $serie <list>, $periodicity <list>,
+    ## #   shortSummary$raw <chr>, language <chr>, abstractShort <chr>
+
+As the API limit is 350 results, you can get the full data catalog by
+looping on specific parameters. For example, you can loop over all
+`prodima` numbers (equivalent to BFS themes):
+
+``` r
+# themes_names <- c("Statistical basis and overviews 00", "Population 01", "Territory and environment 02", "Work and income 03", "National economy 04", "Prices 05", "Industry and services 06", "Agriculture and forestry 07", "Energy 08", "Construction and housing 09", "Tourism 10", "Mobility and transport 11", "Money, banks and insurance 12", "Social security 13", "Health 14", "Education and science 15", "Culture, media, information society, sports 16", "Politics 17", "General Government and finance 18", "Crime and criminal justice 19", "Economic and social situation of the population 20", "Sustainable development, regional and international disparities 21")
+themes_prodima <- c(900001, 900010, 900035, 900051, 900075, 900084, 900092, 900104, 900127, 900140, 900160, 900169, 900191, 900198, 900210, 900212, 900214, 900226, 900239, 900257, 900269, 900276)
+
+library(purrr)
+
+catalog_all <- purrr::pmap_dfr(
+  .l = list(language = "de", prodima = themes_prodima, return_raw = TRUE),
+  .f = bfs_get_catalog_data,
+)
+
+catalog_all
+```
+
+    ## # A tibble: 764 × 5
+    ##    ids$uuid     $contentId bfs$embargo description$titles$m…¹ shop$orderNr links
+    ##    <chr>             <int> <chr>       <chr>                  <chr>        <lis>
+    ##  1 8a2bfd2e-a9…    1085359 2024-10-03… Privathaushalte nach … px-x-010202… <df> 
+    ##  2 a964371b-27…    1085346 2024-10-03… Ständige Wohnbevölker… px-x-010202… <df> 
+    ##  3 ef70eb19-93…     325772 2024-09-26… Heiraten und Heiratsh… px-x-010202… <df> 
+    ##  4 32069ba3-1c…     189095 2024-09-26… Lebendgeburten nach M… px-x-010202… <df> 
+    ##  5 5a8b2ea1-e2…     325776 2024-09-26… Scheidungen und Schei… px-x-010202… <df> 
+    ##  6 66f3d4f6-ed…     189065 2024-09-26… Todesfälle nach Monat… px-x-010202… <df> 
+    ##  7 51dfa1cf-21…   13807205 2024-08-23… Männliche Vornamen de… px-x-010405… <df> 
+    ##  8 b65c9036-b0…   13807212 2024-08-23… Weibliche Vornamen de… px-x-010405… <df> 
+    ##  9 38a86458-22…     189124 2024-08-22… Auswanderung der stän… px-x-010302… <df> 
+    ## 10 6426823f-cb…     189120 2024-08-22… Auswanderung der stän… px-x-010302… <df> 
+    ## # ℹ 754 more rows
+    ## # ℹ abbreviated name: ¹​description$titles$main
+    ## # ℹ 16 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
+    ## #   bfs$lifecycle <df[,4]>, $lifecycleGroup <chr>, $provisional <lgl>,
+    ## #   $articleModel <df[,4]>, $articleModelGroup <df[,4]>,
+    ## #   $lastUpdatedVersion <chr>, description$titles$sub <chr>,
+    ## #   description$categorization <df[,13]>, $bibliography <df[,2]>, …
+
+``` r
+# to not overload the server, please save the data frame locally
+# readr::write_csv(catalog_all, "catalog_all.csv") 
+# catalog_all <- readr::read_csv("catalog_all.csv") 
+```
+
+Please use this loop moderately to not overload BFS server unnecessarily
+(just run it when needed and save the result locally).
 
 ### Download data in any language
 
 The function `bfs_get_data()` allows you to download any dataset from
-the [data
+the [BFS
 catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html)
-using its BFS number (FSO number).
+(equivalent to selecting “data” in the “Article Type” dropdown of the
+BFS website) using its BFS number (FSO number).
 
 Using the `number_bfs` argument (FSO number), you can get BFS data in a
 given language (“en”, “de”, “fr” or “it”) from the official PXWeb API of
 the Swiss Federal Statistical Office.
 
 ``` r
-#catalog_student$order_nr[1] # px-x-1502040100_131
-
+#catalog_student$number_bfs[1] # px-x-1502040100_131
 bfs_get_data(number_bfs = "px-x-1502040100_131", language = "en")
 ```
 
@@ -289,9 +364,10 @@ BFS::bfs_get_data(
 ### Catalog of tables
 
 A lot of datasets are not accessible through the official PXWeb API.
-They are listed in the [catalog of
-tables](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html).
-You can search for specific tables using `bfs_get_catalog_tables()`.
+They are listed in the [data
+catalog](https://www.bfs.admin.ch/bfs/en/home/statistics/catalogue.html)
+as “tables” in the “Article Type” dropdown of the BFS website. You can
+search for specific tables using `bfs_get_catalog_tables()`.
 
 ``` r
 catalog_tables_en_students <- bfs_get_catalog_tables(language = "en", extended_search = "students")
@@ -299,15 +375,14 @@ catalog_tables_en_students <- bfs_get_catalog_tables(language = "en", extended_s
 catalog_tables_en_students
 ```
 
-    ## # A tibble: 5 × 7
-    ##   title       language number_asset publication_date order_nr language_available
-    ##   <chr>       <chr>    <chr>        <date>           <chr>    <list>            
-    ## 1 Students a… en       31826381     2024-05-01       ts-x-15… <chr [4]>         
-    ## 2 Students a… en       31826380     2024-05-01       ts-x-15… <chr [4]>         
-    ## 3 Students a… en       31185431     2024-03-28       su-e-15… <chr [1]>         
-    ## 4 Students a… en       31185438     2024-03-28       su-e-15… <chr [1]>         
-    ## 5 Students a… en       31185427     2024-03-28       su-e-15… <chr [1]>         
-    ## # ℹ 1 more variable: damId <int>
+    ## # A tibble: 5 × 5
+    ##   title                          language number_asset publication_date order_nr
+    ##   <chr>                          <chr>    <chr>        <date>           <chr>   
+    ## 1 Students at universities and … en       31826381     2024-05-01       ts-x-15…
+    ## 2 Students at universities of a… en       31826380     2024-05-01       ts-x-15…
+    ## 3 Students at universities and … en       31185431     2024-03-28       su-e-15…
+    ## 4 Students at universities of a… en       31185438     2024-03-28       su-e-15…
+    ## 5 Students at universities of t… en       31185427     2024-03-28       su-e-15…
 
 Most of the BFS tables are Excel or CSV files. You can download an table
 with `bfs_download_asset()` using the `number asset`.
@@ -324,6 +399,62 @@ file_path <- BFS::bfs_download_asset(
   destfile = "su-e-15.02.04.01.xlsx"
 )
 ```
+
+To return all the catalog metadata in the raw (uncleaned) structure, you
+can add `return_raw = TRUE`:
+
+``` r
+catalog_tables_raw <- bfs_get_catalog_tables(
+  language = "en", 
+  extended_search = "student", 
+  return_raw = TRUE
+)
+
+catalog_tables_raw
+```
+
+    ## # A tibble: 6 × 5
+    ##   ids$uuid      $contentId bfs$embargo description$titles$m…¹ shop$orderNr links
+    ##   <chr>              <int> <chr>       <chr>                  <chr>        <lis>
+    ## 1 a5169f0b-6f8…   14876281 2024-10-31… Student mobility with… su-e-15.02.… <df> 
+    ## 2 7a604831-d27…   20044168 2024-05-01… Students at universit… ts-x-15.02.… <df> 
+    ## 3 ac4e3021-db4…   20044200 2024-05-01… Students at universit… ts-x-15.02.… <df> 
+    ## 4 5e328530-77f…     528179 2024-03-28… Students at universit… su-e-15.02.… <df> 
+    ## 5 6e27402b-8dc…     528173 2024-03-28… Students at universit… su-e-15.02.… <df> 
+    ## 6 1e86c267-5f9…     528176 2024-03-28… Students at universit… su-e-15.02.… <df> 
+    ## # ℹ abbreviated name: ¹​description$titles$main
+    ## # ℹ 14 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
+    ## #   bfs$lifecycle <df[,4]>, $lifecycleGroup <chr>, $provisional <lgl>,
+    ## #   $articleModel <df[,4]>, $articleModelGroup <df[,4]>,
+    ## #   description$categorization <df[,13]>, $bibliography <df[,1]>,
+    ## #   $language <chr>, $shortSummary <df[,2]>, $abstractShort <chr>,
+    ## #   shop$stock <lgl>
+
+The data catalog in a raw structure returns a data.frame containing
+nested data.frames in some columns. Here an example to get the
+`description` nested data.frame as a tibble:
+
+``` r
+library(dplyr)
+
+as_tibble(catalog_tables_raw$description)
+```
+
+    ## # A tibble: 6 × 6
+    ##   titles$main                categorization$colle…¹ bibliography$period language
+    ##   <chr>                      <list>                 <chr>               <chr>   
+    ## 1 Student mobility within S… <df [2 × 4]>           2022                EN      
+    ## 2 Students at universities … <df [3 × 4]>           1980-2023           DE/EN/F…
+    ## 3 Students at universities … <df [3 × 4]>           2000-2023           DE/EN/F…
+    ## 4 Students at universities … <df [3 × 4]>           1990-2023           EN      
+    ## 5 Students at universities … <df [3 × 4]>           1997-2023           EN      
+    ## 6 Students at universities … <df [2 × 4]>           2005-2023           EN      
+    ## # ℹ abbreviated name: ¹​categorization$collection
+    ## # ℹ 14 more variables: categorization$prodima <list>, $inquiry <list>,
+    ## #   $spatialdivision <list>, $classification <list>, $institution <list>,
+    ## #   $publisher <list>, $tags <list>, $dataSource <list>, $copyrights <list>,
+    ## #   $termsOfUse <list>, $serie <list>, $periodicity <list>,
+    ## #   shortSummary <df[,2]>, abstractShort <chr>
 
 ## Access geodata catalog
 
@@ -412,7 +543,7 @@ You can get [cartographic base
 maps](https://www.bfs.admin.ch/bfs/en/home/statistics/regional-statistics/base-maps/cartographic-bases.assetdetail.24025646.html)
 from the ThemaKart project using `bfs_get_base_maps()`. The list of
 available geometries in the [official
-documentation](https://www.bfs.admin.ch/asset/en/24025645).
+documentation](https://www.bfs.admin.ch/bfs/en/home/statistics/regional-statistics/base-maps/cartographic-bases.html).
 
 The default arguments of `bfs_get_base_maps()` can be change to access
 specific files:
@@ -426,7 +557,7 @@ bfs_get_base_maps(
   date = NULL,
   most_recent = TRUE, #get most recent file by default
   format = "shp",
-  asset_number = "24025646" #change to get older ThemaKart data
+  asset_number = "24025646" #change ThemaKart geodata as updated every year
 )
 ```
 
@@ -435,9 +566,8 @@ A typical base maps ThemaKart file looks like this:
 <img style="border:0px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/base_maps_file.png" align="center" />
 
 ``` r
-# list of geometry names: https://www.bfs.admin.ch/asset/en/24025645
 switzerland_sf <- bfs_get_base_maps(geom = "suis")
-communes_sf <- bfs_get_base_maps(geom = "polg", date = "20230101")
+communes_sf <- bfs_get_base_maps(geom = "polg")
 districts_sf <- bfs_get_base_maps(geom = "bezk")
 cantons_sf <- bfs_get_base_maps(geom = "kant")
 cantons_capitals_sf <- bfs_get_base_maps(geom = "stkt", type = "Pnts", category = "kk")
@@ -469,50 +599,82 @@ BFS::bfs_get_base_maps(geom = "bezk") |>
 
 <img style="border:1px solid black;" src="https://raw.githubusercontent.com/lgnbhl/BFS/master/man/figures/mapview.png" align="center" />
 
-### Swiss Official Commune Register
+### Get official list of Swiss municipalities
 
-The package also contains the official Swiss official commune registers
-for different administrative levels:
-
-- `register_gde`
-- `register_gde_other`
-- `register_bzn`
-- `register_kt`
-- `register_kt_seeanteile`
-- `register_dic`
+You can also get the historicized list of Swiss municipalities from the
+official BFS API using the new **swissMunicipalities** R package. The
+documentation is
+[here](https://github.com/SwissStatsR/swissMunicipalities).
 
 ``` r
-# commune register data
-BFS::register_gde
+# remotes::install_github("SwissStatsR/swissMunicipalities")
+library(swissMunicipalities)
+library(dplyr) # just for data wrangling
+
+# snapshot of today list of Swiss municipalites/districts/cantons
+snapshot <- swissMunicipalities::get_snapshots(hist_id = TRUE)
+
+municipalities <- snapshot |> 
+  filter(Level == 3) |>
+  rename_with(~ paste0(.x, "_municipality", recycle0 = TRUE)) |>
+  select(-Level_municipality)
+
+districts <- snapshot |> 
+  filter(Level == 2) |>
+  rename_with(~ paste0(.x, "_district", recycle0 = TRUE)) |>
+  select(-Level_district)
+
+cantons <- snapshot |> 
+  filter(Level == 1) |>
+  rename_with(~ paste0(.x, "_canton", recycle0 = TRUE)) |>
+  select(-Level_canton)
+
+# consolidate municipality data with districts and cantons levels
+municipalities_consolidated <- municipalities |>
+  left_join(districts, by = join_by(Parent_municipality == Identifier_district)) |>
+  left_join(cantons, by = join_by(Parent_district == Identifier_canton)) |>
+  rename(Identifier_district = Parent_municipality, Identifier_canton = Parent_district) |>
+  select(starts_with(c("Identifier", "Name", "ABBREV", "Valid")), everything()) |>
+  arrange(Identifier_municipality, Identifier_district)
+
+municipalities_consolidated
 ```
 
-    ## # A tibble: 2,136 × 8
-    ##    GDEKT GDEBZNR GDENR GDENAME            GDENAMK      GDEBZNA GDEKTNA GDEMUTDAT
-    ##    <chr>   <dbl> <dbl> <chr>              <chr>        <chr>   <chr>   <chr>    
-    ##  1 ZH        101     1 Aeugst am Albis    Aeugst am A… Bezirk… Zürich  1976-11-…
-    ##  2 ZH        101     2 Affoltern am Albis Affoltern a… Bezirk… Zürich  1848-09-…
-    ##  3 ZH        101     3 Bonstetten         Bonstetten   Bezirk… Zürich  1848-09-…
-    ##  4 ZH        101     4 Hausen am Albis    Hausen am A… Bezirk… Zürich  1911-01-…
-    ##  5 ZH        101     5 Hedingen           Hedingen     Bezirk… Zürich  1848-09-…
-    ##  6 ZH        101     6 Kappel am Albis    Kappel am A… Bezirk… Zürich  1911-01-…
-    ##  7 ZH        101     7 Knonau             Knonau       Bezirk… Zürich  1848-09-…
-    ##  8 ZH        101     8 Maschwanden        Maschwanden  Bezirk… Zürich  1848-09-…
-    ##  9 ZH        101     9 Mettmenstetten     Mettmenstet… Bezirk… Zürich  1848-09-…
-    ## 10 ZH        101    10 Obfelden           Obfelden     Bezirk… Zürich  1848-09-…
-    ## # ℹ 2,126 more rows
+    # A tibble: 2,131 × 82
+       Identifier_municipality Identifier_district Identifier_canton Name_en_municipality Name_fr_municipality
+                         <dbl>               <dbl>             <dbl> <chr>                <chr>               
+     1                       1                 101                 1 Aeugst am Albis      Aeugst am Albis     
+     2                       2                 101                 1 Affoltern am Albis   Affoltern am Albis  
+     3                       3                 101                 1 Bonstetten           Bonstetten          
+     4                       4                 101                 1 Hausen am Albis      Hausen am Albis     
+     5                       5                 101                 1 Hedingen             Hedingen            
+     6                       6                 101                 1 Kappel am Albis      Kappel am Albis     
+     7                       7                 101                 1 Knonau               Knonau              
+     8                       8                 101                 1 Maschwanden          Maschwanden         
+     9                       9                 101                 1 Mettmenstetten       Mettmenstetten      
+    10                      10                 101                 1 Obfelden             Obfelden            
+    # ℹ 2,121 more rows
+    # ℹ 77 more variables: Name_de_municipality <chr>, Name_it_municipality <chr>, Name_en_district <chr>,
+    #   Name_fr_district <chr>, Name_de_district <chr>, Name_it_district <chr>, Name_en_canton <chr>,
+    #   Name_fr_canton <chr>, Name_de_canton <chr>, Name_it_canton <chr>, ABBREV_1_Text_en_municipality <chr>,
+    #   ABBREV_1_Text_fr_municipality <chr>, ABBREV_1_Text_de_municipality <chr>, ABBREV_1_Text_it_municipality <chr>,
+    #   ABBREV_1_Text_municipality <chr>, ABBREV_1_Text_en_district <chr>, ABBREV_1_Text_fr_district <chr>,
+    #   ABBREV_1_Text_de_district <chr>, ABBREV_1_Text_it_district <chr>, ABBREV_1_Text_district <chr>, …
+    # ℹ Use `print(n = ...)` to see more rows
 
-You can use registers to ease geodata analysis.
+You can now use the consolidated list of Swiss municipalities to ease
+geodata analysis.
 
 ``` r
-library(dplyr)
 library(sf)
+library(ggplot2)
 
 communes_sf <- bfs_get_base_maps(geom = "polg", date = "20230101")
 
 communes_ge <- communes_sf |>
-  inner_join(BFS::register_gde |> 
-               filter(GDEKTNA == "Genève"), 
-             by = c("id" = "GDENR"))
+  inner_join(municipalities_consolidated |>
+               filter(Name_de_canton == "Genève"), 
+             by = c("id" = "Identifier_municipality"))
 
 bbox_ge <- sf::st_bbox(communes_ge)
 

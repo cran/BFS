@@ -17,7 +17,8 @@ bfs_get_catalog_data(
   order_nr = NULL,
   limit = 1000,
   article_model = 900033,
-  article_model_group = 900029
+  article_model_group = 900029,
+  return_raw = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ bfs_get_catalog_data(
 \item{article_model}{integer articleModel parameter query}
 
 \item{article_model_group}{integer articleModel parameter query}
+
+\item{return_raw}{boolean Return raw data from json structure as a tibble data.frame}
 }
 \value{
 A data frame. Returns NULL if no connection.
@@ -68,8 +71,12 @@ bfs_get_catalog_data(language = "en", title = "students", prodima = c(900212))
 \describe{
   \item{title}{A character column with the title of the BFS dataset}
   \item{language}{A character column with the language of the BFS dataset}
-  \item{publication_date}{The published date of the BFS dataset in the data catalog}
   \item{number_asset}{The BFS asset number}
+  \item{number_bfs}{The BFS number (FSO number), named orderNr in the API}
+  \item{publication_date}{The published date of the BFS dataset, named embargo in the API}
+  \item{language_available}{A list The list of all languages available for the BFS dataset}
   \item{url_px}{A character column with the URL of the PX file}
+  \item{url_structure_json}{A character column with the URL of the json structure of the BFS dataset}
+  \item{damId}{DAM API unique ID}
 }
 }

@@ -3,8 +3,8 @@
 #' This functions helps to get base maps data from the ThemaKart project
 #' as an sf object. The geom names and the general structure of the files
 #' can be found in the offical BFS documentation,
-#' see \url{https://www.bfs.admin.ch/asset/en/24025645}. When using this data, please read the condition of use
-#' and copyright mentions.
+#' see \url{https://www.bfs.admin.ch/bfs/en/home/statistics/regional-statistics/base-maps/cartographic-bases.html}. 
+#' When using this data, please read the condition of use and copyright mentions.
 #'
 #' If you want to get ThemaKart data from previous years, you can change
 #' the `asset_number` for the related zip file. For example, for the map
@@ -32,7 +32,7 @@
 #' @return sf object with geometries. Returns NULL if no connection.
 #'
 #' @export
-bfs_get_base_maps <- function(geom = NULL, category = "gf", type = "Poly", date = NULL, most_recent = TRUE, format = "shp", asset_number = "24025646") {
+bfs_get_base_maps <- function(geom = NULL, category = "gf", type = "Poly", date = NULL, most_recent = TRUE, format = "shp", asset_number = "30566934") {
   if (is.null(geom)) {
     stop("Please choose a geom, such as 'suis', 'kant' or 'polg'.\nGeometry names are listed here: \nhttps://www.bfs.admin.ch/asset/en/24025645", call. = FALSE)
   }

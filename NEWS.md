@@ -1,3 +1,13 @@
+# BFS 0.5.11
+- BREAKING CHANGE: column `orderNr` returned by `bfs_get_catalog()` renamed 
+  as `number_bfs` for more clarity. Unnecessary new variables also removed in
+  profit of the `return_raw` argument.
+- add `return_raw` in `bfs_get_catalog()` and `bfs_get_tables()`, which returns
+  all metadata in an raw / unstructured tibble.
+- update to last available BFS geodata asset imported using `bfs_get_base_maps()`
+  - https://www.bfs.admin.ch/bfs/en/home/statistics/catalogues-databases.assetdetail.30606132.html
+- Use new **swissMunicipalities** R package to ease geodata analysis 
+
 # BFS 0.5.10
 - fix bug in metadata extraction in `bfs_get_catalog()`, 
   `bfs_get_catalog_data()` and `bfs_get_catalog_tables()`
