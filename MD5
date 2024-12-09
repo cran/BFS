@@ -1,10 +1,10 @@
-26a9e2bee4aab1186a0ab04cbe40003e *DESCRIPTION
+d25a4a2b8929610da8b4930fe6a3adb2 *DESCRIPTION
 3127c60944f9bc1c7ea4f6ab26bb6660 *NAMESPACE
-d1095eb34378bffd8456cebee0ee8f32 *NEWS.md
+cb61a3879ed406e70f6e9077fe1fadea *NEWS.md
 9889e92d734221eafd0aad38e47ee4a9 *R/bfs_download_asset.R
 dfdc24e4543cefba3ce8efeb4e20a1a6 *R/bfs_download_geodata.R
 e547a72d8d69c2250ee15556f190eb6c *R/bfs_get_asset_metadata.R
-9a45f209c200ab486ac88a17c0c9863b *R/bfs_get_base_maps.R
+47f5d1d1488a9804fdcbb71955f82c79 *R/bfs_get_base_maps.R
 9f6cc8cb91d13cdef575ce903a4e4e0e *R/bfs_get_catalog.R
 970a0b645722ff57ec0528c0b8bb12fd *R/bfs_get_catalog_data.R
 555e89f6a8f1832b26c4ca3b47e01e78 *R/bfs_get_catalog_geodata.R
@@ -15,7 +15,7 @@ c3aec4dc3b92063063244651347eb70c *R/bfs_get_catalog_tables.R
 887e11a3fec3f24a48474f4d72eed9ce *R/data.R
 48d2b8bf527234a84c89b9904d00e4f8 *R/globals.R
 cf794928715019cf81bd51d467156178 *R/utils-pipe.R
-8cdeccf528595f268046c67d9d07b445 *README.md
+4bbeaa9b2aa573d3e300d1ef33482b6a *README.md
 c765b5503f3f76b01e844dd6b9b08bbf *data/register_bzn.rda
 4a1a4a3a294b846d2d4a9c1cbd92234c *data/register_dic.rda
 977915e4bc0af3d82f32f43a5b5aebdc *data/register_gde.rda
@@ -25,7 +25,7 @@ c765b5503f3f76b01e844dd6b9b08bbf *data/register_bzn.rda
 5e12eed7202295b78942fdb1b67a00d6 *man/bfs_download_asset.Rd
 310009a745e704b4e71c9b4b1972f270 *man/bfs_download_geodata.Rd
 9c7f36f2b08994b9ae9bc859c9c29f05 *man/bfs_get_asset_metadata.Rd
-a3d70e30cc40bee6906adf8fa45c3665 *man/bfs_get_base_maps.Rd
+c3d08ec058b76a042209becf97f66e65 *man/bfs_get_base_maps.Rd
 ea94c054f7cc0486f623e8d7cdd52863 *man/bfs_get_catalog.Rd
 ae68eb07fe720bc229d1733dcb36ef38 *man/bfs_get_catalog_data.Rd
 e520d2bdc4967a8228c5c6132c55459b *man/bfs_get_catalog_geodata.Rd
@@ -33,7 +33,7 @@ e520d2bdc4967a8228c5c6132c55459b *man/bfs_get_catalog_geodata.Rd
 11ec56470381aa805ccbbbcb21d878dd *man/bfs_get_data.Rd
 ff4f65073f79ba8e4b4f37927f430eec *man/bfs_get_data_comments.Rd
 7314755e23de562961a53cab2417be55 *man/bfs_get_metadata.Rd
-bfd401517ed7154d53420e110d0fefc1 *man/figures/base_maps.png
+ac56f9cbdf7d28356911164dba0c8352 *man/figures/base_maps.png
 bec65c155bd096f0b7cca0e51dca94de *man/figures/base_maps_file.png
 f8b8a7ff97e760d45e938028dd3e4630 *man/figures/base_maps_ge.png
 5f789adf8b535a9c2b5571c481c512ec *man/figures/leaflet_g1.png
@@ -51,7 +51,7 @@ c492843d2c47884a676f06d52b72f56a *man/register_kt_seeanteile.Rd
 2c0a4fe79baf338676d8c4f2f9e1bfe5 *tests/testthat/test-bfs_download_asset.R
 5027b7acd7a1096c026702a5437d87e8 *tests/testthat/test-bfs_download_geodata.R
 1f85250a698c56cb6092bb72b19042c3 *tests/testthat/test-bfs_get_asset_metadata.R
-d1ba73cfc9824e6a701c86532c66c80c *tests/testthat/test-bfs_get_base_maps.R
+22fece90ae6a20a32ec05d4754c00a2c *tests/testthat/test-bfs_get_base_maps.R
 5dff9642a7c0b81f2f30ef942138e8cf *tests/testthat/test-bfs_get_catalog_data.R
 73b8dce245382015cc5b0828e3a87888 *tests/testthat/test-bfs_get_catalog_geodata.R
 bca98118db824a2f718fdc46017bdc1b *tests/testthat/test-bfs_get_catalog_tables.R
