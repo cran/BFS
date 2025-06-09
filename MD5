@@ -1,10 +1,10 @@
-196b7355a0ff68baa262da25ae12728d *DESCRIPTION
-3127c60944f9bc1c7ea4f6ab26bb6660 *NAMESPACE
-e3a07f3d2bfd929a41ea76de8a450832 *NEWS.md
+a87e02d5fd785a7419ff9cb2ac7f3eab *DESCRIPTION
+cbcb56c5ee5fc99e0bc4db068d427736 *NAMESPACE
+48de6ffb283126a7236d9d3eb86d6c23 *NEWS.md
 9889e92d734221eafd0aad38e47ee4a9 *R/bfs_download_asset.R
-dfdc24e4543cefba3ce8efeb4e20a1a6 *R/bfs_download_geodata.R
+45c3eba61a6dccfb43f7bf78acbaf67e *R/bfs_download_geodata.R
 e547a72d8d69c2250ee15556f190eb6c *R/bfs_get_asset_metadata.R
-47f5d1d1488a9804fdcbb71955f82c79 *R/bfs_get_base_maps.R
+aec5a639df2daeaa8dce294290b13109 *R/bfs_get_base_maps.R
 9f6cc8cb91d13cdef575ce903a4e4e0e *R/bfs_get_catalog.R
 ac452e35b4017c829c5d45236fddcbc9 *R/bfs_get_catalog_data.R
 555e89f6a8f1832b26c4ca3b47e01e78 *R/bfs_get_catalog_geodata.R
@@ -15,7 +15,7 @@ ac452e35b4017c829c5d45236fddcbc9 *R/bfs_get_catalog_data.R
 887e11a3fec3f24a48474f4d72eed9ce *R/data.R
 48d2b8bf527234a84c89b9904d00e4f8 *R/globals.R
 cf794928715019cf81bd51d467156178 *R/utils-pipe.R
-8e14df8b1a5fcbbefe20c3298dca2f6f *README.md
+2e816797ef6ae2fe2bdf3a1c65d79aa7 *README.md
 c765b5503f3f76b01e844dd6b9b08bbf *data/register_bzn.rda
 4a1a4a3a294b846d2d4a9c1cbd92234c *data/register_dic.rda
 977915e4bc0af3d82f32f43a5b5aebdc *data/register_gde.rda
@@ -49,9 +49,9 @@ e0ed9260b00b840f691c5d60fb74411c *man/register_kt.Rd
 c492843d2c47884a676f06d52b72f56a *man/register_kt_seeanteile.Rd
 33399283e72682727570f7610934e88b *tests/testthat.R
 2c0a4fe79baf338676d8c4f2f9e1bfe5 *tests/testthat/test-bfs_download_asset.R
-5027b7acd7a1096c026702a5437d87e8 *tests/testthat/test-bfs_download_geodata.R
+738f96dd336712e890df49d2b7eeff58 *tests/testthat/test-bfs_download_geodata.R
 1f85250a698c56cb6092bb72b19042c3 *tests/testthat/test-bfs_get_asset_metadata.R
-22fece90ae6a20a32ec05d4754c00a2c *tests/testthat/test-bfs_get_base_maps.R
+556822a8beecfdc018c4c699345d6010 *tests/testthat/test-bfs_get_base_maps.R
 5dff9642a7c0b81f2f30ef942138e8cf *tests/testthat/test-bfs_get_catalog_data.R
 73b8dce245382015cc5b0828e3a87888 *tests/testthat/test-bfs_get_catalog_geodata.R
 bca98118db824a2f718fdc46017bdc1b *tests/testthat/test-bfs_get_catalog_tables.R

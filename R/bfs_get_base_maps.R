@@ -25,7 +25,6 @@
 #' @param asset_number Asset number of the base maps zip file.
 #' @param return_sf if TRUE, read file path and return sf object. If FALSE, return file path
 #'
-#' @importFrom sf read_sf
 #' @importFrom tools R_user_dir
 #' @importFrom fs dir_create dir_ls
 #' @importFrom zip unzip
@@ -92,6 +91,7 @@ bfs_get_base_maps <- function(geom = NULL, category = "gf", type = "Poly", date 
     if (identical(file_selected, character(0))) {
       stop("No related file found. Please use other argument values.", call. = FALSE)
     }
+    rlang::check_installed("sf")
     sf::read_sf(file_selected)
   } else {
     file_selected
