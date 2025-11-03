@@ -11,6 +11,8 @@ total](https://cranlogs.r-pkg.org/badges/grand-total/BFS)](https://cran.r-projec
 [![Codecov test
 coverage](https://codecov.io/gh/lgnbhl/BFS/branch/master/graph/badge.svg)](https://app.codecov.io/gh/lgnbhl/BFS?branch=master)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Follow-E4405F?style=social&logo=linkedin)](https://www.linkedin.com/in/FelixLuginbuhl/)
+[![Codecov test
+coverage](https://codecov.io/gh/lgnbhl/BFS/graph/badge.svg)](https://app.codecov.io/gh/lgnbhl/BFS)
 <!-- badges: end -->
 
 # BFS <img src="man/figures/logo.png" align="right" height="138" />
@@ -40,6 +42,84 @@ devtools::install_github("lgnbhl/BFS")
 ``` r
 library(BFS)
 ```
+
+## Access Swiss Stats Exporer API
+
+To get data from the [Swiss Stats Explorer API](https://stats.swiss/)
+(SSE) you first create a query using the metadata codelist from SSE
+using the `bfs_get_sse_metadata()` function. First get the codelist of a
+BFS dataset:
+
+``` r
+codelist <- bfs_get_sse_metadata("DF_LWZ_1", language = "en")
+
+codelist
+```
+
+    ## # A tibble: 2,321 × 5
+    ##    code      text                             value valueText position_dimension
+    ##    <chr>     <chr>                            <chr> <chr>                  <int>
+    ##  1 GR_KT_GDE Cantons, districts and municipa… 1     Aeugst a…                  1
+    ##  2 GR_KT_GDE Cantons, districts and municipa… 10    Obfelden                   1
+    ##  3 GR_KT_GDE Cantons, districts and municipa… 100   Stadel                     1
+    ##  4 GR_KT_GDE Cantons, districts and municipa… 1001  Dopplesc…                  1
+    ##  5 GR_KT_GDE Cantons, districts and municipa… 1002  Entlebuch                  1
+    ##  6 GR_KT_GDE Cantons, districts and municipa… 1004  Flühli                     1
+    ##  7 GR_KT_GDE Cantons, districts and municipa… 1005  Hasle (L…                  1
+    ##  8 GR_KT_GDE Cantons, districts and municipa… 1007  Romoos                     1
+    ##  9 GR_KT_GDE Cantons, districts and municipa… 1008  Schüpfhe…                  1
+    ## 10 GR_KT_GDE Cantons, districts and municipa… 1009  Werthens…                  1
+    ## # ℹ 2,311 more rows
+
+Then filter the codelist to build your query:
+
+``` r
+querydat <- codelist %>% 
+  dplyr::filter((code == "GR_KT_GDE" & valueText %in% c("Aarau", "Olten")) |
+                  (code == "WOHN_ANZAHL" & valueText == "Total") |
+                  (code == "LEERWOHN_TYP" & valueText == "Vacant dwelling for rent") |
+                  (code == "MEASURE_DIMENSION" & valueText == "Value"))
+query <- tapply(querydat$value, querydat$code, c)
+
+query
+```
+
+    ## $GR_KT_GDE
+    ## [1] "2581" "4001"
+    ## 
+    ## $LEERWOHN_TYP
+    ## [1] "4"
+    ## 
+    ## $MEASURE_DIMENSION
+    ## [1] "V"
+    ## 
+    ## $WOHN_ANZAHL
+    ## [1] "_T"
+
+This query can be used in the new `bfs_get_sse_data()` function to
+import the data.
+
+``` r
+bfs_get_sse_data(
+  number_bfs = "DF_LWZ_1", 
+  language = "en", 
+  query =  query,
+  start_period = "2020",
+  end_period = "2023"
+)
+```
+
+    ## # A tibble: 8 × 7
+    ##   TIME_PERIOD GR_KT_GDE WOHN_ANZAHL LEERWOHN_TYP   MEASURE_DIMENSION FREQ  value
+    ##   <chr>       <chr>     <chr>       <chr>          <chr>             <chr> <dbl>
+    ## 1 2020        Olten     Total       Vacant dwelli… Value             Annu…   350
+    ## 2 2021        Olten     Total       Vacant dwelli… Value             Annu…   393
+    ## 3 2022        Olten     Total       Vacant dwelli… Value             Annu…   418
+    ## 4 2023        Olten     Total       Vacant dwelli… Value             Annu…   266
+    ## 5 2020        Aarau     Total       Vacant dwelli… Value             Annu…   110
+    ## 6 2021        Aarau     Total       Vacant dwelli… Value             Annu…    85
+    ## 7 2022        Aarau     Total       Vacant dwelli… Value             Annu…    61
+    ## 8 2023        Aarau     Total       Vacant dwelli… Value             Annu…    49
 
 ### Get the data catalog
 
@@ -155,25 +235,25 @@ catalog_all <- purrr::pmap_dfr(
 catalog_all
 ```
 
-    ## # A tibble: 829 × 5
+    ## # A tibble: 768 × 5
     ##    ids$uuid     $contentId bfs$embargo description$titles$m…¹ shop$orderNr links
     ##    <chr>             <int> <chr>       <chr>                  <chr>        <lis>
-    ##  1 bba0de31-70…    8046592 2025-05-27… Bilanz der ständigen … DF_SSV_POP_… <df> 
-    ##  2 5e100287-34…    8046595 2025-05-27… Privathaushalte nach … DF_SSV_POP_… <df> 
-    ##  3 14ca2839-fa…    8046576 2025-05-27… Ständige Wohnbevölker… DF_SSV_POP_… <df> 
-    ##  4 5809d749-b8…    8046585 2025-05-27… Ständige Wohnbevölker… DF_SSV_POP_… <df> 
-    ##  5 811809a5-81…    8046584 2025-05-27… Ständige Wohnbevölker… DF_SSV_POP_… <df> 
-    ##  6 cf1a3815-4b…    8046587 2025-05-27… Ständige Wohnbevölker… DF_SSV_POP_… <df> 
-    ##  7 b067bf92-b5…    8046596 2025-05-27… Ständige ausländische… DF_SSV_POP_… <df> 
-    ##  8 c6a6fd56-15…    8046600 2025-05-27… Ständige ausländische… DF_SSV_POP_… <df> 
-    ##  9 eef5e488-1e…   35207666 2025-04-17… Ständige und nichtstä… DF_STATPOP_… <df> 
-    ## 10 6e602991-c5…     328373 2025-04-15… Szenarien zum Bildung… px-x-150909… <df> 
-    ## # ℹ 819 more rows
+    ##  1 c001d7d3-c8…     325772 2025-09-25… Heiraten und Heiratsh… px-x-010202… <df> 
+    ##  2 be1f72da-ab…     189095 2025-09-25… Lebendgeburten nach M… px-x-010202… <df> 
+    ##  3 595d7bde-97…     325776 2025-09-25… Scheidungen und Schei… px-x-010202… <df> 
+    ##  4 cbc06e96-d8…     189065 2025-09-25… Todesfälle nach Monat… px-x-010202… <df> 
+    ##  5 ed95f4e3-4a…   13807205 2025-08-28… Männliche Vornamen de… px-x-010405… <df> 
+    ##  6 dcefda9c-b6…   13807212 2025-08-28… Weibliche Vornamen de… px-x-010405… <df> 
+    ##  7 4d53b847-9d…     189124 2025-08-27… Auswanderung der stän… px-x-010302… <df> 
+    ##  8 010ce6b9-38…     189120 2025-08-27… Auswanderung der stän… px-x-010302… <df> 
+    ##  9 baf1b850-e1…     189087 2025-08-27… Auswanderung der stän… px-x-010302… <df> 
+    ## 10 a3460776-11…     325764 2025-08-27… Auswanderung der stän… px-x-010302… <df> 
+    ## # ℹ 758 more rows
     ## # ℹ abbreviated name: ¹​description$titles$main
-    ## # ℹ 17 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
+    ## # ℹ 16 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
     ## #   bfs$lifecycle <df[,4]>, $lifecycleGroup <chr>, $provisional <lgl>,
     ## #   $articleModel <df[,4]>, $articleModelGroup <df[,4]>,
-    ## #   $lastUpdatedVersion <chr>, description$titles$super <chr>, $$sub <chr>,
+    ## #   $lastUpdatedVersion <chr>, description$titles$sub <chr>,
     ## #   description$categorization <df[,13]>, $bibliography <df[,2]>, …
 
 ``` r
@@ -417,18 +497,18 @@ catalog_tables_raw
     ## # A tibble: 6 × 5
     ##   ids$uuid      $contentId bfs$embargo description$titles$m…¹ shop$orderNr links
     ##   <chr>              <int> <chr>       <chr>                  <chr>        <lis>
-    ## 1 bf5e392a-e95…   20044168 2025-03-27… Students at universit… ts-x-15.02.… <df> 
-    ## 2 c9eb6b70-43f…     528179 2025-03-27… Students at universit… su-e-15.02.… <df> 
-    ## 3 36a042c8-b94…   20044200 2025-03-27… Students at universit… ts-x-15.02.… <df> 
-    ## 4 28ce8307-668…     528173 2025-03-27… Students at universit… su-e-15.02.… <df> 
-    ## 5 d3bc2d74-119…     528176 2025-03-27… Students at universit… su-e-15.02.… <df> 
-    ## 6 a5169f0b-6f8…   14876281 2024-10-31… Student mobility with… su-e-15.02.… <df> 
+    ## 1 2f0d3744-3b1…   14876281 2025-10-27… Student mobility with… su-e-15.02.… <df> 
+    ## 2 bf5e392a-e95…   20044168 2025-03-27… Students at universit… ts-x-15.02.… <df> 
+    ## 3 c9eb6b70-43f…     528179 2025-03-27… Students at universit… su-e-15.02.… <df> 
+    ## 4 36a042c8-b94…   20044200 2025-03-27… Students at universit… ts-x-15.02.… <df> 
+    ## 5 28ce8307-668…     528173 2025-03-27… Students at universit… su-e-15.02.… <df> 
+    ## 6 d3bc2d74-119…     528176 2025-03-27… Students at universit… su-e-15.02.… <df> 
     ## # ℹ abbreviated name: ¹​description$titles$main
     ## # ℹ 14 more variables: ids$gnp <chr>, $damId <int>, $languageCopyId <int>,
     ## #   bfs$lifecycle <df[,4]>, $lifecycleGroup <chr>, $provisional <lgl>,
     ## #   $articleModel <df[,4]>, $articleModelGroup <df[,4]>,
     ## #   description$categorization <df[,13]>, $bibliography <df[,1]>,
-    ## #   $shortSummary <df[,2]>, $language <chr>, $abstractShort <chr>,
+    ## #   $language <chr>, $shortSummary <df[,2]>, $abstractShort <chr>,
     ## #   shop$stock <lgl>
 
 The data catalog in a raw structure returns a data.frame containing
@@ -442,20 +522,20 @@ as_tibble(catalog_tables_raw$description)
 ```
 
     ## # A tibble: 6 × 6
-    ##   titles$main       categorization$colle…¹ bibliography$period shortSummary$html
-    ##   <chr>             <list>                 <chr>               <chr>            
-    ## 1 Students at univ… <df [3 × 4]>           1980-2024           <p>Descriptions …
-    ## 2 Students at univ… <df [3 × 4]>           1990-2024           <NA>             
-    ## 3 Students at univ… <df [3 × 4]>           2000-2024           <p>Descriptions …
-    ## 4 Students at univ… <df [3 × 4]>           1997-2024           <NA>             
-    ## 5 Students at univ… <df [2 × 4]>           2005-2024           <NA>             
-    ## 6 Student mobility… <df [2 × 4]>           2022                <NA>             
+    ##   titles$main                categorization$colle…¹ bibliography$period language
+    ##   <chr>                      <list>                 <chr>               <chr>   
+    ## 1 Student mobility within S… <df [2 × 4]>           2023                EN      
+    ## 2 Students at universities … <df [3 × 4]>           1980-2024           DE/EN/F…
+    ## 3 Students at universities … <df [3 × 4]>           1990-2024           EN      
+    ## 4 Students at universities … <df [3 × 4]>           2000-2024           DE/EN/F…
+    ## 5 Students at universities … <df [3 × 4]>           1997-2024           EN      
+    ## 6 Students at universities … <df [2 × 4]>           2005-2024           EN      
     ## # ℹ abbreviated name: ¹​categorization$collection
-    ## # ℹ 15 more variables: categorization$prodima <list>, $inquiry <list>,
+    ## # ℹ 14 more variables: categorization$prodima <list>, $inquiry <list>,
     ## #   $spatialdivision <list>, $classification <list>, $institution <list>,
     ## #   $publisher <list>, $tags <list>, $dataSource <list>, $copyrights <list>,
     ## #   $termsOfUse <list>, $serie <list>, $periodicity <list>,
-    ## #   shortSummary$raw <chr>, language <chr>, abstractShort <chr>
+    ## #   shortSummary <df[,2]>, abstractShort <chr>
 
 ## Access geodata catalog
 
